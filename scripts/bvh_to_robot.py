@@ -71,6 +71,13 @@ if __name__ == "__main__":
         type=int,
     )
     
+    parser.add_argument(
+        "--max_frames",
+        default=None,
+        type=int,
+        help="Maximum number of frames to process.",
+    )
+    
     args = parser.parse_args()
     
     if args.save_path is not None:
@@ -82,6 +89,9 @@ if __name__ == "__main__":
     
     # Load SMPLX trajectory
     lafan1_data_frames, actual_human_height = load_bvh_file(args.bvh_file, format=args.format)
+    
+    if args.max_frames:
+        lafan1_data_frames = lafan1_data_frames[:args.max_frames]
     
     
     # Initialize the retargeting system
