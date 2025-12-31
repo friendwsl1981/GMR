@@ -1,0 +1,304 @@
+
+<mujoco model="figurobot_2nd">
+  <compiler angle="radian" meshdir="meshes/"/>
+  
+  <option timestep="0.002" iterations="50" solver="Newton" gravity="0 0 -9.81"/>
+  
+  <!-- 电机类型定义 (根据 default.yml) -->
+  <default>
+    <default class="XC330">
+      <joint damping="0.1" armature="0.0001" frictionloss="0.1"/>
+      <position kp="14.0" kv="0.1" forcerange="-2.3 2.3"/>
+    </default>
+    <default class="XM430">
+      <joint damping="0.15" armature="0.00015" frictionloss="0.15"/>
+      <position kp="20.0" kv="0.15" forcerange="-4.1 4.1"/>
+    </default>
+    <default class="2XC430">
+      <joint damping="0.2" armature="0.0002" frictionloss="0.2"/>
+      <position kp="28.0" kv="0.2" forcerange="-4.6 4.6"/>
+    </default>
+  </default>
+  
+  <worldbody>
+    <!-- ========== 根节点：腰部+骨盆 ========== -->
+    <body name="waist_pelvis" pos="0 0 0.35">
+      <freejoint name="root"/>
+      <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.0005"/>
+      <geom name="waist_geom" type="box" size="0.06 0.05 0.04" rgba="0.7 0.7 0.7 1"/>
+      <geom name="pelvis_geom" type="capsule" fromto="0 0.04 -0.02 0 -0.04 -0.02" size="0.025" rgba="0.7 0.7 0.7 1"/>
+      
+      <!-- IMU 传感器 - 直接在根节点，无需变换 -->
+      <site name="imu" pos="0 0 0.01" quat="1 0 0 0"/>
+      
+      <!-- ==================== 左腿 (6-DOF) ==================== -->
+      <!-- 大腿根：承载roll电机，被pitch电机驱动 -->
+      <body name="left_thigh_root" pos="0 0.05 -0.05">
+        <!-- pitch关节：大腿根相对骨盆的前后摆动，电机在骨盆里 -->
+        <joint name="left_hip_pitch" type="hinge" axis="0 1 0" range="-90 90" class="2XC430"/>
+        <!-- 大腿根质量：外壳 + roll电机 -->
+        <inertial pos="0 0 0" mass="0.01" diaginertia="0.00001 0.00001 0.00001"/>
+        <geom name="left_hip_pitch_geom" type="cylinder" size="0.015 0.01" rgba="0.3 0.3 0.8 1"/>
+        
+        <!-- 大腿：承载yaw电机，被roll电机驱动 -->
+        <body name="left_thigh" pos="0 0 -0.02">
+          <!-- roll关节：大腿相对大腿根的左右摆动（外展/内收），电机在大腿根里 -->
+          <joint name="left_hip_roll" type="hinge" axis="1 0 0" range="-30 80" class="2XC430"/>
+          <!-- 大腿质量：大腿本体 + yaw电机 -->
+          <inertial pos="0 0 -0.05" mass="0.08" diaginertia="0.0002 0.0002 0.00005"/>
+          <geom name="left_thigh_geom" type="capsule" fromto="0 0 0 0 0 -0.1" size="0.02" rgba="0.3 0.3 0.8 1"/>
+          
+          <!-- 膝盖：承载knee_pitch电机，被yaw电机驱动 -->
+          <body name="left_knee" pos="0 0 -0.1">
+            <!-- yaw关节：膝盖相对大腿的旋转，电机在大腿里 -->
+            <joint name="left_hip_yaw" type="hinge" axis="0 0 1" range="-20 20" class="XC330"/>
+            <!-- 膝盖质量：膝盖外壳 + knee_pitch电机 -->
+            <inertial pos="0 0 -0.005" mass="0.02" diaginertia="0.00001 0.00001 0.00001"/>
+            <geom name="left_knee_geom" type="cylinder" size="0.015 0.015" rgba="0.3 0.3 0.8 1"/>
+            
+            <!-- 小腿：承载ankle_pitch电机，被knee_pitch电机驱动 -->
+            <body name="left_shank" pos="0 0 -0.015">
+              <!-- knee_pitch关节：小腿相对膝盖的弯曲，电机在膝盖里 -->
+              <joint name="left_knee_pitch" type="hinge" axis="0 1 0" range="-120 0" class="2XC430"/>
+              <!-- 小腿质量：小腿本体 + ankle_pitch电机 -->
+              <inertial pos="0 0 -0.05" mass="0.07" diaginertia="0.0002 0.0002 0.00005"/>
+              <geom name="left_shank_geom" type="capsule" fromto="0 0 0 0 0 -0.1" size="0.015" rgba="0.3 0.3 0.8 1"/>
+              
+              <!-- 脚：承载toe_roll电机，被ankle_pitch电机驱动 -->
+              <body name="left_foot" pos="0 0 -0.1">
+                <!-- ankle_pitch关节：脚相对小腿的上下翘，电机在小腿里 -->
+                <joint name="left_ankle_pitch" type="hinge" axis="0 1 0" range="-45 45" class="XM430"/>
+                <!-- 脚质量：脚后跟 + 脚掌 + toe_roll电机 -->
+                <inertial pos="0.02 0 -0.015" mass="0.06" diaginertia="0.0001 0.0002 0.0001"/>
+                <geom name="left_foot_geom" type="box" size="0.03 0.02 0.01" pos="0.01 0 -0.015" rgba="0.2 0.2 0.6 1"/>
+                
+                <!-- 脚前掌：被toe_roll电机驱动 -->
+                <body name="left_forefoot" pos="0.04 0 -0.015">
+                  <!-- toe_roll关节：脚前掌相对脚的左右倾斜，电机在脚里 -->
+                  <joint name="left_toe_roll" type="hinge" axis="1 0 0" range="-30 30" class="XC330"/>
+                  <!-- 脚前掌质量：脚趾部分 -->
+                  <inertial pos="0.015 0 0" mass="0.07" diaginertia="0.00005 0.0001 0.00005"/>
+                  <geom name="left_forefoot_geom" type="box" size="0.025 0.02 0.008" pos="0.015 0 0" rgba="0.2 0.2 0.6 1"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+      
+      <!-- ==================== 右腿 (6-DOF，镜像) ==================== -->
+      <!-- 右腿结构与左腿镜像，关节范围相反 -->
+      <body name="right_thigh_root" pos="0 -0.05 -0.05">
+        <!-- pitch关节：与左腿相同 -->
+        <joint name="right_hip_pitch" type="hinge" axis="0 1 0" range="-90 90" class="2XC430"/>
+        <inertial pos="0 0 0" mass="0.01" diaginertia="0.00001 0.00001 0.00001"/>
+        <geom name="right_hip_pitch_geom" type="cylinder" size="0.015 0.01" rgba="0.8 0.3 0.3 1"/>
+        
+        <body name="right_thigh" pos="0 0 -0.02">
+          <!-- roll关节：range与左腿相反（-80~30 vs -30~80） -->
+          <joint name="right_hip_roll" type="hinge" axis="1 0 0" range="-80 30" class="2XC430"/>
+          <inertial pos="0 0 -0.05" mass="0.08" diaginertia="0.0002 0.0002 0.00005"/>
+          <geom name="right_thigh_geom" type="capsule" fromto="0 0 0 0 0 -0.1" size="0.02" rgba="0.8 0.3 0.3 1"/>
+          
+          <body name="right_knee" pos="0 0 -0.1">
+            <joint name="right_hip_yaw" type="hinge" axis="0 0 1" range="-20 20" class="XC330"/>
+            <inertial pos="0 0 -0.005" mass="0.02" diaginertia="0.00001 0.00001 0.00001"/>
+            <geom name="right_knee_geom" type="cylinder" size="0.015 0.015" rgba="0.8 0.3 0.3 1"/>
+            
+            <body name="right_shank" pos="0 0 -0.015">
+              <joint name="right_knee_pitch" type="hinge" axis="0 1 0" range="-120 0" class="2XC430"/>
+              <inertial pos="0 0 -0.05" mass="0.07" diaginertia="0.0002 0.0002 0.00005"/>
+              <geom name="right_shank_geom" type="capsule" fromto="0 0 0 0 0 -0.1" size="0.015" rgba="0.8 0.3 0.3 1"/>
+              
+              <body name="right_foot" pos="0 0 -0.1">
+                <joint name="right_ankle_pitch" type="hinge" axis="0 1 0" range="-45 45" class="XM430"/>
+                <inertial pos="0.02 0 -0.015" mass="0.06" diaginertia="0.0001 0.0002 0.0001"/>
+                <geom name="right_foot_geom" type="box" size="0.03 0.02 0.01" pos="0.01 0 -0.015" rgba="0.6 0.2 0.2 1"/>
+                
+                <body name="right_forefoot" pos="0.04 0 -0.015">
+                  <joint name="right_toe_roll" type="hinge" axis="1 0 0" range="-30 30" class="XC330"/>
+                  <inertial pos="0.015 0 0" mass="0.07" diaginertia="0.00005 0.0001 0.00005"/>
+                  <geom name="right_forefoot_geom" type="box" size="0.025 0.02 0.008" pos="0.015 0 0" rgba="0.6 0.2 0.2 1"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+      
+      <!-- ==================== 腰椎→胸部 (3-DOF) ==================== -->
+      <!-- 腰椎1：承载roll电机，被yaw电机驱动 -->
+      <body name="lumbar1" pos="0 0 0.02">
+        <!-- yaw关节：腰椎1相对骨盆的左右转动，电机在骨盆里 -->
+        <joint name="waist_yaw" type="hinge" axis="0 0 1" range="-45 45" class="XM430"/>
+        <!-- 腰椎1质量：腰椎外壳 + roll电机 -->
+        <inertial pos="0 0 0.01" mass="0.02" diaginertia="0.00001 0.00001 0.00001"/>
+        <geom name="lumbar1_geom" type="cylinder" size="0.02 0.015" rgba="0.6 0.6 0.6 1"/>
+        
+        <!-- 腰椎2：承载pitch电机，被roll电机驱动 -->
+        <body name="lumbar2" pos="0 0 0.025">
+          <!-- roll关节：腰椎2相对腰椎1的左右侧倾，电机在腰椎1里 -->
+          <joint name="waist_roll" type="hinge" axis="1 0 0" range="-30 30" class="XM430"/>
+          <!-- 腰椎2质量：腰椎外壳 + pitch电机 -->
+          <inertial pos="0 0 0.01" mass="0.02" diaginertia="0.00001 0.00001 0.00001"/>
+          <geom name="lumbar2_geom" type="cylinder" size="0.02 0.015" rgba="0.6 0.6 0.6 1"/>
+          
+          <!-- 胸部：被pitch电机驱动 -->
+          <body name="chest" pos="0 0 0.025">
+            <!-- pitch关节：胸部相对腰椎2的前后倾斜，电机在腰椎2里 -->
+            <joint name="waist_pitch" type="hinge" axis="0 1 0" range="-45 45" class="XM430"/>
+            <!-- 胸部质量：胸腔 + 肩膀电机 + 脖子电机 -->
+            <inertial pos="0 0 0.05" mass="0.1" diaginertia="0.0003 0.0003 0.0002"/>
+            <geom name="chest_geom" type="box" size="0.08 0.06 0.05" pos="0 0 0.05" rgba="0.5 0.5 0.5 1"/>
+            
+            <!-- ==================== 头部 (1-DOF) ==================== -->
+            <!-- 脖子+头：被neck_yaw电机驱动 -->
+            <body name="neck_head" pos="0 0 0.1">
+              <!-- yaw关节：头部相对胸部的左右转动，电机在胸部里 -->
+              <joint name="neck_yaw" type="hinge" axis="0 0 1" range="-60 60" class="XC330"/>
+              <!-- 脖子+头质量：脖子 + 头部 -->
+              <inertial pos="0 0 0.05" mass="0.07" diaginertia="0.0001 0.0001 0.0001"/>
+              <geom name="neck_geom" type="cylinder" size="0.015 0.025" rgba="0.9 0.9 0.9 1"/>
+              <geom name="head_geom" type="sphere" size="0.04" pos="0 0 0.06" rgba="0.9 0.9 0.9 1"/>
+            </body>
+            
+            <!-- ==================== 左臂 (5-DOF) ==================== -->
+            <!-- 左肩：承载shoulder_roll电机，被shoulder_pitch电机驱动 -->
+            <body name="left_shoulder" pos="0 0.08 0.08">
+              <!-- shoulder_pitch关节：肩膀相对胸部的前后摆动，电机在胸部里 -->
+              <joint name="left_shoulder_pitch" type="hinge" axis="0 1 0" range="-120 120" class="XM430"/>
+              <!-- 左肩质量：肩膀外壳 + shoulder_roll电机 -->
+              <inertial pos="0 0 0" mass="0.015" diaginertia="0.00001 0.00001 0.00001"/>
+              <geom name="left_shoulder_geom" type="cylinder" size="0.015 0.015" rgba="0.3 0.8 0.3 1"/>
+              
+              <!-- 左大臂：承载elbow_yaw电机，被shoulder_roll电机驱动 -->
+              <body name="left_upper_arm" pos="0 0.02 0">
+                <!-- shoulder_roll关节：大臂相对肩膀的展开/内收，电机在肩膀里 -->
+                <joint name="left_shoulder_roll" type="hinge" axis="1 0 0" range="-90 180" class="XM430"/>
+                <!-- 左大臂质量：大臂本体 + elbow_yaw电机 -->
+                <inertial pos="0 0 -0.04" mass="0.03" diaginertia="0.0001 0.0001 0.00002"/>
+                <geom name="left_upper_arm_geom" type="capsule" fromto="0 0 0 0 0 -0.08" size="0.012" rgba="0.3 0.8 0.3 1"/>
+                
+                <!-- 左肘：承载elbow_roll电机，被elbow_yaw电机驱动 -->
+                <body name="left_elbow" pos="0 0 -0.08">
+                  <!-- elbow_yaw关节：肘部相对大臂的旋转，电机在大臂里 -->
+                  <joint name="left_elbow_yaw" type="hinge" axis="0 0 1" range="-90 90" class="XC330"/>
+                  <!-- 左肘质量：肘部外壳 + elbow_roll电机 -->
+                  <inertial pos="0 0 -0.005" mass="0.01" diaginertia="0.00001 0.00001 0.00001"/>
+                  <geom name="left_elbow_geom" type="cylinder" size="0.012 0.01" rgba="0.3 0.8 0.3 1"/>
+                  
+                  <!-- 左小臂：承载wrist_roll电机，被elbow_roll电机驱动 -->
+                  <body name="left_forearm" pos="0 0 -0.015">
+                    <!-- elbow_roll关节：小臂相对肘部的弯曲，电机在肘部里 -->
+                    <joint name="left_elbow_roll" type="hinge" axis="1 0 0" range="0 135" class="XC330"/>
+                    <!-- 左小臂质量：小臂本体 + wrist_roll电机 -->
+                    <inertial pos="0 0 -0.04" mass="0.025" diaginertia="0.0001 0.0001 0.00002"/>
+                    <geom name="left_forearm_geom" type="capsule" fromto="0 0 0 0 0 -0.08" size="0.01" rgba="0.3 0.8 0.3 1"/>
+                    
+                    <!-- 左手：被wrist_roll电机驱动 -->
+                    <body name="left_hand" pos="0 0 -0.08">
+                      <!-- wrist_roll关节：手相对小臂的旋转，电机在小臂里 -->
+                      <joint name="left_wrist_roll" type="hinge" axis="1 0 0" range="-90 90" class="XC330"/>
+                      <!-- 左手质量：手掌 + 手指 -->
+                      <inertial pos="0 0 -0.015" mass="0.04" diaginertia="0.00005 0.00005 0.00002"/>
+                      <geom name="left_hand_geom" type="box" size="0.015 0.01 0.025" pos="0 0 -0.015" rgba="0.2 0.6 0.2 1"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+            
+            <!-- ==================== 右臂 (5-DOF，镜像) ==================== -->
+            <!-- 右臂结构与左臂镜像，部分关节范围相反 -->
+            <body name="right_shoulder" pos="0 -0.08 0.08">
+              <!-- shoulder_pitch关节：与左臂相同 -->
+              <joint name="right_shoulder_pitch" type="hinge" axis="0 1 0" range="-120 120" class="XM430"/>
+              <inertial pos="0 0 0" mass="0.015" diaginertia="0.00001 0.00001 0.00001"/>
+              <geom name="right_shoulder_geom" type="cylinder" size="0.015 0.015" rgba="0.8 0.8 0.3 1"/>
+              
+              <body name="right_upper_arm" pos="0 -0.02 0">
+                <!-- shoulder_roll关节：range与左臂相反（-180~90 vs -90~180） -->
+                <joint name="right_shoulder_roll" type="hinge" axis="1 0 0" range="-180 90" class="XM430"/>
+                <inertial pos="0 0 -0.04" mass="0.03" diaginertia="0.0001 0.0001 0.00002"/>
+                <geom name="right_upper_arm_geom" type="capsule" fromto="0 0 0 0 0 -0.08" size="0.012" rgba="0.8 0.8 0.3 1"/>
+                
+                <body name="right_elbow" pos="0 0 -0.08">
+                  <joint name="right_elbow_yaw" type="hinge" axis="0 0 1" range="-90 90" class="XC330"/>
+                  <inertial pos="0 0 -0.005" mass="0.01" diaginertia="0.00001 0.00001 0.00001"/>
+                  <geom name="right_elbow_geom" type="cylinder" size="0.012 0.01" rgba="0.8 0.8 0.3 1"/>
+                  
+                  <body name="right_forearm" pos="0 0 -0.015">
+                    <!-- elbow_roll关节：range与左臂相反（-135~0 vs 0~135） -->
+                    <joint name="right_elbow_roll" type="hinge" axis="1 0 0" range="-135 0" class="XC330"/>
+                    <inertial pos="0 0 -0.04" mass="0.025" diaginertia="0.0001 0.0001 0.00002"/>
+                    <geom name="right_forearm_geom" type="capsule" fromto="0 0 0 0 0 -0.08" size="0.01" rgba="0.8 0.8 0.3 1"/>
+                    
+                    <body name="right_hand" pos="0 0 -0.08">
+                      <joint name="right_wrist_roll" type="hinge" axis="1 0 0" range="-90 90" class="XC330"/>
+                      <inertial pos="0 0 -0.015" mass="0.04" diaginertia="0.00005 0.00005 0.00002"/>
+                      <geom name="right_hand_geom" type="box" size="0.015 0.01 0.025" pos="0 0 -0.015" rgba="0.6 0.6 0.2 1"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+            
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  
+  <!-- ==================== 传感器 ==================== -->
+  <sensor>
+    <accelerometer name="accel" site="imu"/>
+    <gyro name="gyro" site="imu"/>
+    <magnetometer name="mag" site="imu"/>
+    <framepos name="waist_pos" objtype="body" objname="waist_pelvis"/>
+    <framequat name="waist_quat" objtype="body" objname="waist_pelvis"/>
+    <framelinvel name="waist_linvel" objtype="body" objname="waist_pelvis"/>
+    <frameangvel name="waist_angvel" objtype="body" objname="waist_pelvis"/>
+  </sensor>
+  
+  <!-- ==================== 执行器 ==================== -->
+  <actuator>
+    <!-- 左腿执行器 -->
+    <position name="left_hip_pitch" joint="left_hip_pitch" class="2XC430"/>
+    <position name="left_hip_roll" joint="left_hip_roll" class="2XC430"/>
+    <position name="left_hip_yaw" joint="left_hip_yaw" class="XC330"/>
+    <position name="left_knee_pitch" joint="left_knee_pitch" class="2XC430"/>
+    <position name="left_ankle_pitch" joint="left_ankle_pitch" class="XM430"/>
+    <position name="left_toe_roll" joint="left_toe_roll" class="XC330"/>
+    
+    <!-- 右腿执行器 -->
+    <position name="right_hip_pitch" joint="right_hip_pitch" class="2XC430"/>
+    <position name="right_hip_roll" joint="right_hip_roll" class="2XC430"/>
+    <position name="right_hip_yaw" joint="right_hip_yaw" class="XC330"/>
+    <position name="right_knee_pitch" joint="right_knee_pitch" class="2XC430"/>
+    <position name="right_ankle_pitch" joint="right_ankle_pitch" class="XM430"/>
+    <position name="right_toe_roll" joint="right_toe_roll" class="XC330"/>
+    
+    <!-- 腰部执行器 -->
+    <position name="waist_yaw" joint="waist_yaw" class="XM430"/>
+    <position name="waist_roll" joint="waist_roll" class="XM430"/>
+    <position name="waist_pitch" joint="waist_pitch" class="XM430"/>
+    
+    <!-- 头部执行器 -->
+    <position name="neck_yaw" joint="neck_yaw" class="XC330"/>
+    
+    <!-- 左臂执行器 -->
+    <position name="left_shoulder_pitch" joint="left_shoulder_pitch" class="XM430"/>
+    <position name="left_shoulder_roll" joint="left_shoulder_roll" class="XM430"/>
+    <position name="left_elbow_yaw" joint="left_elbow_yaw" class="XC330"/>
+    <position name="left_elbow_roll" joint="left_elbow_roll" class="XC330"/>
+    <position name="left_wrist_roll" joint="left_wrist_roll" class="XC330"/>
+    
+    <!-- 右臂执行器 -->
+    <position name="right_shoulder_pitch" joint="right_shoulder_pitch" class="XM430"/>
+    <position name="right_shoulder_roll" joint="right_shoulder_roll" class="XM430"/>
+    <position name="right_elbow_yaw" joint="right_elbow_yaw" class="XC330"/>
+    <position name="right_elbow_roll" joint="right_elbow_roll" class="XC330"/>
+    <position name="right_wrist_roll" joint="right_wrist_roll" class="XC330"/>
+  </actuator>
+  
+</mujoco>

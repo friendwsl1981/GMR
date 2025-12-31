@@ -1,0 +1,24 @@
+robot:
+    hand_name: hand_roll_link
+    foot_name: foot_roll_link
+    # 质心位置（从XML的pelvis inertial提取）
+    com_x: -0.009871              # 质心X偏移（pelvis的inertial pos）
+    # com_z: 0.029373               # 质心Z偏移（pelvis的inertial pos）
+    com_z: 0.22
+    # 髋关节内部尺寸
+    hip_pitch_to_roll_z: 0.0      # hip_pitch_link到thigh_roll_link的Z距离
+    torso_to_hip_z: 0.0           # pelvis到hip_pitch_link的Z距离
+    # 腿部长度（从XML body位置提取）
+    hip_to_knee_z: 0.116          # 大腿长度（thigh_roll到knee_yaw）
+    knee_to_ankle_z: 0.1746       # 小腿长度（knee_yaw到ankle，含中间shank段）
+    # 总高度
+    hip_to_ankle_pitch_z: 0.2906  # hip_pitch到ankle_pitch的高度
+    hip_to_ankle_roll_z: 0.2966   # thigh_roll到foot_roll轴的高度（含0.006偏移）
+    # 脚掌偏移
+    ankle_pitch_to_foot_x: 0.02355   # ankle_pitch到foot_roll的X偏移（脚掌前伸）
+    ankle_pitch_to_foot_z: 0.006     # ankle_pitch到foot_roll轴的Z偏移
+    foot_roll_to_ground_z: 0.02942   # foot_roll轴到脚底的距离（实测）
+    ankle_to_ground_z: 0.03542       # ankle_pitch到脚底总距离 (0.006+0.02942)
+    # ZMP步态关键参数（双脚间距）
+    foot_to_com_y: 0.03995        # 单脚到身体中线距离（0.0202+0.01975）
+    # foot_to_com_y: 0.03

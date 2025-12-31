@@ -1,0 +1,98 @@
+# Link and Joint Name Mapping: figurobot_2nd (SolidWorks URDF) -> toddlerbot style
+# This file defines how to rename links and joints from SolidWorks naming to toddlerbot naming convention
+#
+# Based on toddlerbot_2xc_pos.xml actual naming:
+#   - Body names: {left/right}_{part}_{joint_type}_link (e.g., left_hip_pitch_link)
+#   - Joint names: {left/right}_{part}_{joint_type} (e.g., left_hip_pitch) - NO _link suffix
+#   - Waist joint names: waist_yaw, waist_roll (no waist_pitch in toddlerbot)
+#
+# SolidWorks URDF naming:
+#   L_/R_ + Part + FB/LR/Rev + _Link (e.g., L_Leg_FB_Link)
+#   FB (Front-Back) -> pitch
+#   LR (Left-Right) -> roll  
+#   Rev (Revolution) -> yaw
+#   jiont (typo in URDF) -> joint
+
+# Link name mappings
+links:
+  # Base/Torso
+  base_link: pelvis
+  
+  # Waist/Pelvis - Note: Waist_FB is actually pelvis in toddlerbot
+  Waist_Rev_Link: lumbar2_yaw_link          # Waist yaw (parent of pelvis)
+  Waist_LR_Link: lumbar1_roll_link      # This is actually a gear drive, not pelvis
+  Waist_FB_Link: chest_pitch_link           # This is the pelvis
+  
+  # Neck and Head
+  Neck_Rev_Link: neck_yaw_link
+  
+  # Left Leg
+  L_Leg_FB_Link: left_hip_pitch_link
+  L_Leg_LR_Link: left_thigh_roll_link
+  L_Leg_Rev_Link: left_knee_yaw_link
+  L_Knee_FB_Link: left_shank_pitch_link
+  L_Foot_FB_Link: left_ankle_pitch_link
+  L_Foot_LR_Link: left_foot_roll_link
+  
+  # Right Leg
+  R_Leg_FB_Link: right_hip_pitch_link
+  R_Leg_LR_Link: right_thigh_roll_link
+  R_Leg_Rev_Link: right_knee_yaw_link
+  R_Kenn_FB_Link: right_shank_pitch_link       # Note: typo in original (Kenn->Knee)
+  R_Foot_FB_Link: right_ankle_pitch_link
+  R_Foot_LR_Link: right_foot_roll_link
+  
+  # Left Arm
+  L_Barm_FB_Link: left_shoulder_pitch_link     
+  L_Barm_LR_Link: left_upper_arm_roll_link 
+  L_Sarm_Rev_Link: left_elbow_yaw_link
+  L_Sarm_LR_Link: left_forearm_roll_link
+  L_Wrist_Link: left_hand_roll_link
+  
+  # Right Arm
+  R_Barm_FB_Link: right_shoulder_pitch_link
+  R_Barm_LR_Link: right_upper_arm_roll_link
+  R_Sarm_Rev_Link: right_elbow_yaw_link
+  R_Sarm_LR_Link: right_forearm_roll_link
+  R_Wrist_Link: right_hand_roll_link
+
+# Joint name mappings (note: URDF has typo "jiont" instead of "joint")
+# Joint names in toddlerbot do NOT have _link suffix, just the joint type
+joints:
+  # Waist/Pelvis - Note: no waist_pitch in toddlerbot, Waist_FB becomes part of pelvis structure
+  Waist_Rev_jiont: lumbar2_yaw 
+  Waist_LR_jiont: lumbar1_roll 
+  Waist_FB_jiont: chest_pitch              # This may not exist in final toddlerbot structure
+  
+  # Neck
+  Neck_Rev_jiont: neck_yaw      # Note: toddlerbot uses _driven for coupled joints
+  
+  # Left Leg - Note: NO _link suffix in joint names
+  L_Leg_FB_jiont: left_hip_pitch
+  L_Leg_LR_jiont: left_thigh_roll
+  L_Leg_Rev_jiont: left_knee_yaw
+  L_Knee_FB_jiont: left_shank_pitch
+  L_Foot_FB_jiont: left_ankle_pitch
+  L_Foot_LR_jiont: left_foot_roll
+  
+  # Right Leg
+  R_Leg_FB_jiont: right_hip_pitch
+  R_Leg_LR_jiont: right_thigh_roll
+  R_Leg_Rev_jiont: right_knee_yaw
+  R_Kenn_FB_jiont: right_shank_pitch 
+  R_Foot_FB_jiont: right_ankle_pitch
+  R_Foot_LR_jiont: right_foot_roll
+  
+  # Left Arm
+  L_Barm_FB_jiont: left_shoulder_pitch     
+  L_Barm_LR_jiont: left_upper_arm_roll
+  L_Sarm_Rev_jiont: left_elbow_yaw      
+  L_Sarm_LR_jiont: left_forearm_roll  
+  L_Wrist_jiont: left_hand_roll
+  
+  # Right Arm
+  R_Barm_FB_jiont: right_shoulder_pitch   
+  R_Barm_LR_jiont: right_upper_arm_roll 
+  R_Sarm_Rev_jiont: right_elbow_yaw
+  R_Sarm_LR_jiont: right_forearm_roll 
+  R_Wrist_jiont: right_hand_roll

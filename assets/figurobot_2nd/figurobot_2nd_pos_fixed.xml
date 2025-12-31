@@ -1,0 +1,597 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mujoco model="figurobot_2nd">
+  <compiler angle="radian" meshdir="assets" autolimits="true" />
+  <default class="main">
+    <geom condim="1" contype="0" conaffinity="0" />
+    <joint damping="0.01" armature="0.0" frictionloss="0.01" />
+    <position inheritrange="1" forcerange="-10 10" />
+    <default class="visual">
+      <geom group="2" density="0" />
+    </default>
+    <default class="collision">
+      <geom group="3" />
+    </default>
+    <default class="XC330">
+      <joint damping="0.001" armature="0.0048" frictionloss="0.006"/>
+    </default>
+    <default class="XC430">
+      <joint damping="0.0072" armature="0.0044" frictionloss="0.014"/>
+    </default>
+    <default class="XM430-W350">
+      <joint damping="0.0133" armature="0.0025" frictionloss="0.105"/>
+    </default>
+    <default class="XM430-W210">
+      <joint damping="0.0064" armature="0.0022" frictionloss="0.038"/>
+    </default>
+    <default class="2XL430">
+      <joint damping="0.0013" armature="0.0083" frictionloss="0.069"/>
+    </default>
+    <default class="2XC430">
+      <joint damping="0.0028" armature="0.0044" frictionloss="0.06"/>
+    </default>
+  </default>
+  <worldbody>
+    <!-- ========== 根节点：腰部+骨盆 (torso) ========== -->
+    <!-- 质量0.2kg，包含骨盆本体和腰部yaw电机 -->
+      <geom type="mesh" class="visual" mesh="pelvis_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="pelvis_visual_material" />
+      <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="pelvis_visual" name="pelvis_collision" />
+
+      <!-- ==================== 左腿 (6-DOF) ==================== -->
+      <!-- 左大腿根：承载hip_roll电机，被hip_pitch电机驱动 -->
+      <body name="left_hip_pitch_link" pos="0.0 0.0202 0.0" quat="1.0 0.0 0.0 0.0">
+        <!-- hip_pitch关节：大腿根相对骨盆的前后摆动，电机(2XC430)在骨盆里 -->
+        <joint name="left_hip_pitch" type="hinge" range="-2.6005 2.6005" class="2XC430" axis="0.0 1.0 0.0" />
+        <!-- 大腿根质量：外壳 + hip_roll电机 -->
+        <inertial pos="-2.6833e-07 0.009638 0.002951" mass="0.02" fullinertia="6.4929e-07 7.9763e-07 7.7628e-07 -3.446e-12 1.0255e-12 -2.0558e-08" />
+        <geom type="mesh" class="visual" mesh="left_hip_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="hip_pitch_link_visual_material" />
+        <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_hip_pitch_link_visual" name="left_hip_pitch_link_collision" />
+        
+        <!-- 左大腿：承载hip_yaw电机，被hip_roll电机驱动 -->
+        <body name="left_thigh_roll_link" pos="0.0 0.01975 0.0" quat="1.0 0.0 0.0 0.0">
+          <!-- hip_roll关节：大腿相对大腿根的左右摆动(外展/内收)，电机(2XC430)在大腿根里 -->
+          <joint name="left_thigh_roll" type="hinge" range="-0.19199 1.2915" class="2XC430" axis="1.0 0.0 0.0" />
+          <!-- 大腿质量：大腿本体 + hip_yaw电机 -->
+          <inertial pos="-5.5647e-07 4.9967e-07 -0.052401" mass="0.07" fullinertia="5.1962e-06 5.2172e-06 1.0341e-06 -2.1261e-11 1.0802e-10 -9.5796e-11" />
+          <geom type="mesh" class="visual" mesh="left_thigh_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="thigh_roll_link_visual_material" />
+          <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_thigh_roll_link_visual" name="left_thigh_roll_link_collision" />
+          
+          <!-- 左膝盖连接件：承载knee电机，被hip_yaw电机驱动 -->
+          <body name="left_knee_yaw_link" pos="0.0 0.0 -0.116" quat="1.0 0.0 0.0 0.0">
+            <!-- hip_yaw关节：膝盖连接件相对大腿的旋转，电机(XC330)在大腿里 -->
+            <joint name="left_knee_yaw" type="hinge" range="-1.3788 1.2217" class="XC330" axis="0.0 0.0 -1.0" />
+            <!-- 膝盖连接件质量：外壳 + knee电机 -->
+            <inertial pos="0.0023183 -4.5894e-08 -0.012377" mass="0.01" fullinertia="6.7808e-07 6.2487e-07 3.184e-07 4.6006e-12 8.2811e-08 1.4645e-11" />
+            <geom type="mesh" class="visual" mesh="left_knee_yaw_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="knee_yaw_link_visual_material" />
+            <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_knee_yaw_link_visual" name="left_knee_yaw_link_collision" />
+            
+            <!-- 左小腿：承载ankle_pitch电机，被knee电机驱动 -->
+            <body name="left_shank_pitch_link" pos="0.0 0.00015 -0.0266" quat="1.0 0.0 0.0 0.0">
+              <!-- knee关节：小腿相对膝盖的弯曲，电机(2XC430)在膝盖连接件里 -->
+              <joint name="left_shank_pitch" type="hinge" range="-2.1817 0.15708" class="2XC430" axis="0.0 -1.0 0.0" />
+              <!-- 小腿质量：小腿本体 + ankle_pitch电机 -->
+              <inertial pos="7.3159e-07 -2.0817e-17 -0.074" mass="0.07" fullinertia="5.8465e-06 5.8045e-06 1.4127e-06 3.1089e-22 -9.5858e-23 -2.1605e-10" />
+              <geom type="mesh" class="visual" mesh="left_shank_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="shank_pitch_link_visual_material" />
+              <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_shank_pitch_link_visual" name="left_shank_pitch_link_collision" />
+              
+              <!-- 左脚踝pitch连接件：承载ankle_roll电机，被ankle_pitch电机驱动 -->
+              <body name="left_ankle_pitch_link" pos="0.0 0.0 -0.148" quat="1.0 0.0 0.0 0.0">
+                <!-- ankle_pitch关节：脚踝相对小腿的上下翘，电机(2XC430)在小腿里 -->
+                <joint name="left_ankle_pitch" type="hinge" range="-0.92502 0.47124" class="2XC430" axis="0.0 1.0 0.0" />
+                <!-- 脚踝连接件质量：外壳 + ankle_roll电机 -->
+                <inertial pos="0.0025325 -2.5318e-05 -0.0093107" mass="0.02" fullinertia="5.6092e-07 8.5837e-07 1.0091e-06 -3.538e-10 2.9835e-08 1.3007e-09" />
+                <geom type="mesh" class="visual" mesh="left_ankle_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="ankle_pitch_link_visual_material" />
+                <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_ankle_pitch_link_visual" name="left_ankle_pitch_link_collision" />
+                
+                <!-- 左脚：被ankle_roll电机驱动 -->
+                <body name="left_foot_roll_link" pos="0.02355 0.0 -0.006" quat="1.0 0.0 0.0 0.0">
+                  <!-- ankle_roll关节：脚相对脚踝的左右倾斜，电机(XC430)在脚踝连接件里 -->
+                  <joint name="left_foot_roll" type="hinge" range="-1.1694 0.89012" class="XC430" axis="1.0 0.0 0.0" />
+                  <!-- 左脚质量：脚掌 + 脚趾 (0.12kg) -->
+                  <inertial pos="0.0016318 -4.0695e-05 -0.016092" mass="0.12" fullinertia="2.2601e-05 0.00013349 0.00014347 -4.0902e-07 -7.3823e-07 5.9658e-08" />
+                  <geom type="mesh" class="visual" mesh="left_foot_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="foot_roll_link_visual_material" />
+                  <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_foot_roll_link_visual" name="left_foot_roll_link_collision" />
+                  <site name="left_foot_center" pos="0.0 0.0 0.0" type="sphere" size="0.005" rgba="0.9 0.1 0.1 0.8" />
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+      
+      <!-- ==================== 右腿 (6-DOF，镜像) ==================== -->
+      <!-- 右大腿根：承载hip_roll电机，被hip_pitch电机驱动 -->
+      <body name="right_hip_pitch_link" pos="0.0 -0.0202 0.0" quat="1.0 0.0 0.0 0.0">
+        <!-- hip_pitch关节：大腿根相对骨盆的前后摆动，电机(2XC430)在骨盆里，镜像左腿 -->
+        <joint name="right_hip_pitch" type="hinge" range="-2.6005 2.6005" class="2XC430" axis="0.0 -1.0 0.0" />
+        <!-- 大腿根质量：外壳 + hip_roll电机 -->
+        <inertial pos="2.6833e-07 -0.009638 0.002951" mass="0.02" fullinertia="6.4929e-07 7.9763e-07 7.7628e-07 -3.446e-12 -1.0255e-12 2.0558e-08" />
+        <geom type="mesh" class="visual" mesh="right_hip_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="hip_pitch_link_visual_material" />
+        <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_hip_pitch_link_visual" name="right_hip_pitch_link_collision" />
+        
+        <!-- 右大腿：承载hip_yaw电机，被hip_roll电机驱动 -->
+        <body name="right_thigh_roll_link" pos="0.0 -0.01975 0.0" quat="1.0 0.0 0.0 0.0">
+          <!-- hip_roll关节：大腿相对大腿根的左右摆动(外展/内收)，电机(2XC430)在大腿根里 -->
+          <joint name="right_thigh_roll" type="hinge" range="-0.19199 1.2915" class="2XC430" axis="-1.0 0.0 0.0" />
+          <!-- 大腿质量：大腿本体 + hip_yaw电机 -->
+          <inertial pos="-5.5647e-07 -4.9967e-07 -0.052401" mass="0.07" fullinertia="5.1962e-06 5.2172e-06 1.0341e-06 -2.1261e-11 -1.0802e-10 -9.5796e-11" />
+          <geom type="mesh" class="visual" mesh="right_thigh_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="thigh_roll_link_visual_material" />
+          <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_thigh_roll_link_visual" name="right_thigh_roll_link_collision" />
+          
+          <!-- 右膝盖连接件：承载knee电机，被hip_yaw电机驱动 -->
+          <body name="right_knee_yaw_link" pos="0.0 0.0 -0.116" quat="1.0 0.0 0.0 0.0">
+            <!-- hip_yaw关节：膝盖连接件相对大腿的旋转，电机(XC330)在大腿里 -->
+            <joint name="right_knee_yaw" type="hinge" range="-1.2392 1.3788" class="XC330" axis="0.0 0.0 -1.0" />
+            <!-- 膝盖连接件质量：外壳 + knee电机 -->
+            <inertial pos="0.0023183 4.5894e-08 -0.012377" mass="0.01" fullinertia="6.7808e-07 6.2487e-07 3.184e-07 4.6006e-12 -8.2811e-08 1.4645e-11" />
+            <geom type="mesh" class="visual" mesh="right_knee_yaw_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="knee_yaw_link_visual_material" />
+            <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_knee_yaw_link_visual" name="right_knee_yaw_link_collision" />
+            
+            <!-- 右小腿：承载ankle_pitch电机，被knee电机驱动 -->
+            <body name="right_shank_pitch_link" pos="0.0 -0.00015 -0.0266" quat="1.0 0.0 0.0 0.0">
+              <!-- knee关节：小腿相对膝盖的弯曲，电机(2XC430)在膝盖连接件里 -->
+              <joint name="right_shank_pitch" type="hinge" range="-2.1468 0.13963" class="2XC430" axis="0.0 -1.0 0.0" />
+              <!-- 小腿质量：小腿本体 + ankle_pitch电机 -->
+              <inertial pos="7.3159e-07 2.0817e-17 -0.074" mass="0.07" fullinertia="5.8465e-06 5.8045e-06 1.4127e-06 -3.1089e-22 -9.5858e-23 -2.1605e-10" />
+              <geom type="mesh" class="visual" mesh="right_shank_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="shank_pitch_link_visual_material" />
+              <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_shank_pitch_link_visual" name="right_shank_pitch_link_collision" />
+              
+              <!-- 右脚踝pitch连接件：承载ankle_roll电机，被ankle_pitch电机驱动 -->
+              <body name="right_ankle_pitch_link" pos="0.0 0.0 -0.148" quat="1.0 0.0 0.0 0.0">
+                <!-- ankle_pitch关节：脚踝相对小腿的上下翘，电机(2XC430)在小腿里 -->
+                <joint name="right_ankle_pitch" type="hinge" range="-0.925 0.47123" class="2XC430" axis="0.0 1.0 0.0" />
+                <!-- 脚踝连接件质量：外壳 + ankle_roll电机 -->
+                <inertial pos="0.0025325 2.5318e-05 -0.0093107" mass="0.02" fullinertia="5.6092e-07 8.5837e-07 1.0091e-06 -3.538e-10 -2.9835e-08 1.3007e-09" />
+                <geom type="mesh" class="visual" mesh="right_ankle_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="ankle_pitch_link_visual_material" />
+                <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_ankle_pitch_link_visual" name="right_ankle_pitch_link_collision" />
+                
+                <!-- 右脚：被ankle_roll电机驱动 -->
+                <body name="right_foot_roll_link" pos="0.02355 0.0 -0.006" quat="1.0 0.0 0.0 0.0">
+                  <!-- ankle_roll关节：脚相对脚踝的左右倾斜，电机(XC430)在脚踝连接件里 -->
+                  <joint name="right_foot_roll" type="hinge" range="-1.1694 0.89117" class="XC430" axis="1.0 0.0 0.0" />
+                  <!-- 右脚质量：脚掌 + 脚趾 (0.12kg) -->
+                  <inertial pos="0.0016318 4.0688e-05 -0.01614" mass="0.12" fullinertia="2.2601e-05 0.00013349 0.00014347 -4.0902e-07 7.3825e-07 5.9661e-08" />
+                  <geom type="mesh" class="visual" mesh="right_foot_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="foot_roll_link_visual_material" />
+                  <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_foot_roll_link_visual" name="right_foot_roll_link_collision" />
+                  <site name="right_foot_center" pos="0.0 0.0 0.0" type="sphere" size="0.005" rgba="0.9 0.1 0.1 0.8" />
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+      
+      <!-- ==================== 腰椎→胸部 (3-DOF) ==================== -->
+      <!-- 腰椎2：承载roll电机，被yaw电机驱动 -->
+      <body name="lumbar2_yaw_link" pos="0.0 0.0 0.0821" quat="1.0 0.0 0.0 0.0">
+        <!-- lumbar2_yaw关节：腰椎2相对骨盆的左右转动，电机在骨盆(torso)里 -->
+        <joint name="lumbar2_yaw" type="hinge" range="-0.47123 0.9599" axis="0.0 0.0 1.0" />
+        <!-- 腰椎2质量：外壳 + roll电机 -->
+        <inertial pos="3.1274e-10 8.979e-05 0.0099906" mass="0.01" fullinertia="9.5806e-07 2.3717e-06 2.0009e-06 -1.2755e-14 2.2113e-14 6.7164e-09" />
+        <geom type="mesh" class="visual" mesh="lumbar2_yaw_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="lumbar2_yaw_link_visual_material" />
+        <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="lumbar2_yaw_link_visual" name="lumbar2_yaw_link_collision" />
+        
+        <!-- 腰椎1：承载pitch电机，被roll电机驱动 -->
+        <body name="lumbar1_roll_link" pos="0.0 0.0 0.0255" quat="1.0 0.0 0.0 0.0">
+          <!-- lumbar1_roll关节：腰椎1相对腰椎2的左右侧倾，电机在腰椎2里 -->
+          <joint name="lumbar1_roll" type="hinge" range="-0.45378 0.8203" axis="-1.0 0.0 0.0" />
+          <!-- 腰椎1质量：外壳 + pitch电机 -->
+          <inertial pos="3.4799e-05 2.1088e-09 0.0008473" mass="0.04" fullinertia="3.8392e-06 3.1685e-06 2.7548e-06 1.2831e-08 -4.0309e-09 -3.1392e-13" />
+          <geom type="mesh" class="visual" mesh="lumbar1_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="lumbar1_roll_link_visual_material" />
+          <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="lumbar1_roll_link_visual" name="lumbar1_roll_link_collision" />
+          
+          <!-- 胸部(chest)：承载neck和shoulder电机，被pitch电机驱动 -->
+          <body name="chest_pitch_link" pos="0.0 0.0 0.0265" quat="1.0 0.0 0.0 0.0">
+            <!-- chest_pitch关节：胸部相对腰椎1的前后倾斜，电机在腰椎1里 -->
+            <joint name="chest_pitch" type="hinge" range="-0.38397 1.1519" axis="0.0 1.0 0.0" />
+            <!-- 胸部质量：胸腔 + neck电机 + 双肩电机 -->
+            <inertial pos="9.1275e-05 2.3345e-05 0.024372" mass="0.09" fullinertia="1.2525e-05 6.6849e-06 1.1304e-05 -1.1242e-08 -7.6108e-08 9.2183e-09" />
+            <geom type="mesh" class="visual" mesh="chest_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="chest_pitch_link_visual_material" />
+            <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="chest_pitch_link_visual" name="chest_pitch_link_collision" />
+            
+            <!-- ==================== 头部 (1-DOF) ==================== -->
+            <!-- 脖子+头：被neck_yaw电机驱动 -->
+            <body name="neck_yaw_link" pos="0.0029 0.0 0.04605" quat="1.0 0.0 0.0 0.0">
+              <!-- neck_yaw关节：头部相对骨盆上部的左右转动，电机(XC330)在骨盆上部里 -->
+              <joint name="neck_yaw" type="hinge" range="-1.3963 1.1868" class="XC330" axis="0.0 0.0 -1.0" />
+              <!-- 脖子+头质量：脖子 + 头部 (0.07kg) -->
+              <inertial pos="-0.011549 -7.6083e-06 0.071192" mass="0.07" fullinertia="1.4377e-05 1.0561e-05 8.4745e-06 2.5937e-09 6.9222e-07 1.479e-08" />
+              <geom type="mesh" class="visual" mesh="neck_yaw_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="neck_yaw_link_visual_material" />
+              <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="neck_yaw_link_visual" name="neck_yaw_link_collision" />
+            </body>
+            
+            <!-- ==================== 左臂 (5-DOF) ==================== -->
+            <!-- 左肩pitch连接件：承载upper_arm_roll电机，被shoulder_pitch电机驱动 -->
+            <body name="left_shoulder_pitch_link" pos="0.0 0.035 0.0355" quat="1.0 0.0 0.0 0.0">
+              <!-- shoulder_pitch关节：肩部相对胸部的前后摆动，电机(2XL430)在胸部里 -->
+              <joint name="left_shoulder_pitch" type="hinge" range="-1 1" class="2XL430" axis="0.0 1.0 0.0" />
+              <!-- 肩pitch连接件质量：外壳 + upper_arm_roll电机 -->
+              <inertial pos="-0.00072892 0.011921 0.001802" mass="0.01" fullinertia="1.2496e-07 8.4302e-08 1.1827e-07 -1.3328e-08 -7.6451e-09 -6.5812e-10" />
+              <geom type="mesh" class="visual" mesh="left_shoulder_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="shoulder_pitch_link_visual_material" />
+              <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_shoulder_pitch_link_visual" name="left_shoulder_pitch_link_collision" />
+              
+              <!-- 左上臂：承载elbow_yaw电机，被upper_arm_roll电机驱动 -->
+              <body name="left_upper_arm_roll_link" pos="-0.000110466661814119 0.0232499554836962 0.0" quat="1.0 0.0 0.0 0.0">
+                <!-- upper_arm_roll关节：上臂相对肩pitch的外展/内收，电机(XC430)在肩pitch里 -->
+                <joint name="left_upper_arm_roll" type="hinge" range="-1.6755 0.66322" class="XC430" axis="1.0 0.0 0.0" />
+                <!-- 上臂质量：上臂本体 + elbow_yaw电机 -->
+                <inertial pos="-5.2245e-05 0.044558 6.9389e-18" mass="0.05" fullinertia="2.9655e-06 7.601e-07 2.9597e-06 -1.0107e-08 -5.1425e-19 -9.8493e-22" />
+                <geom type="mesh" class="visual" mesh="left_upper_arm_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="upper_arm_roll_link_visual_material" />
+                <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_upper_arm_roll_link_visual" name="left_upper_arm_roll_link_collision" />
+                
+                <!-- 左肘连接件：承载forearm_roll电机，被elbow_yaw电机驱动 -->
+                <body name="left_elbow_yaw_link" pos="0.0 0.0945 0.0" quat="1.0 0.0 0.0 0.0">
+                  <!-- elbow_yaw关节：肘部相对上臂的旋转，电机(2XL430)在上臂里 -->
+                  <joint name="left_elbow_yaw" type="hinge" range="-3.2812 0.31416" class="2XL430" axis="0.0 1.0 0.0" />
+                  <!-- 肘连接件质量：外壳 + forearm_roll电机 -->
+                  <inertial pos="-0.00035936 0.008207 0.0021697" mass="0.01" fullinertia="2.6101e-07 1.6576e-07 2.5061e-07 4.2537e-08 7.3444e-09 -2.7561e-08" />
+                  <geom type="mesh" class="visual" mesh="left_elbow_yaw_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="elbow_yaw_link_visual_material" />
+                  <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_elbow_yaw_link_visual" name="left_elbow_yaw_link_collision" />
+                  
+                  <!-- 左前臂：承载hand_roll电机，被forearm_roll电机驱动 -->
+                  <body name="left_forearm_roll_link" pos="-9e-05 0.0215 0.0" quat="1.0 0.0 0.0 0.0">
+                    <!-- forearm_roll关节：前臂相对肘的前后旋转，电机(2XL430)在肘连接件里 -->
+                    <joint name="left_forearm_roll" type="hinge" range="-0.13963 1.7104" class="2XL430" axis="-1.0 0.0 0.0" />
+                    <!-- 前臂质量：前臂本体 + hand_roll电机 -->
+                    <inertial pos="6.9542e-05 0.035626 2.3366e-05" mass="0.04" fullinertia="1.9601e-06 4.5012e-07 1.957e-06 1.0107e-08 -2.5501e-12 -2.7289e-09" />
+                    <geom type="mesh" class="visual" mesh="left_forearm_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="forearm_roll_link_visual_material" />
+                    <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_forearm_roll_link_visual" name="left_forearm_roll_link_collision" />
+                    
+                    <!-- 左手：被hand_roll电机驱动 -->
+                    <body name="left_hand_roll_link" pos="0.0 0.082 0.0" quat="1.0 0.0 0.0 0.0">
+                      <!-- hand_roll关节：手相对前臂的旋转，电机(2XL430)在前臂里 -->
+                      <joint name="left_hand_roll" type="hinge" range="-0.78539 0.40143" class="2XL430" axis="0.0 0.0 -1.0" />
+                      <!-- 手质量：手掌 + 手指 -->
+                      <inertial pos="-7.555e-08 0.0088427 0.0017142" mass="0.01" fullinertia="8.5446e-08 1.8477e-08 8.4638e-08 -4.8403e-13 5.3948e-13 3.4903e-09" />
+                      <geom type="mesh" class="visual" mesh="left_hand_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="hand_roll_link_visual_material" />
+                      <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="left_hand_roll_link_visual" name="left_hand_roll_link_collision" />
+                      <site name="left_hand_center" pos="0.0 0.0 0.0" type="sphere" size="0.005" rgba="0.9 0.1 0.1 0.8" />
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+            
+            <!-- ==================== 右臂 (5-DOF，镜像) ==================== -->
+            <!-- 右肩pitch连接件：承载upper_arm_roll电机，被shoulder_pitch电机驱动 -->
+            <body name="right_shoulder_pitch_link" pos="0.0 -0.035 0.0355" quat="1.0 0.0 0.0 0.0">
+              <!-- shoulder_pitch关节：肩部相对胸部的前后摆动，电机(2XL430)在胸部里，镜像左臂 -->
+              <joint name="right_shoulder_pitch" type="hinge" range="-1 1" class="2XL430" axis="0.0 -1.0 0.0" />
+              <!-- 肩pitch连接件质量：外壳 + upper_arm_roll电机 -->
+              <inertial pos="0.00072892 -0.011921 0.001802" mass="0.01" fullinertia="1.2496e-07 8.4302e-08 1.1827e-07 -1.3328e-08 7.6451e-09 6.5812e-10" />
+              <geom type="mesh" class="visual" mesh="right_shoulder_pitch_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="shoulder_pitch_link_visual_material" />
+              <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_shoulder_pitch_link_visual" name="right_shoulder_pitch_link_collision" />
+              
+              <!-- 右上臂：承载elbow_yaw电机，被upper_arm_roll电机驱动 -->
+              <body name="right_upper_arm_roll_link" pos="0.000110466661814126 -0.0232499554836964 0.0" quat="1.0 0.0 0.0 0.0">
+                <!-- upper_arm_roll关节：上臂相对肩pitch的外展/内收，电机(XC430)在肩pitch里 -->
+                <joint name="right_upper_arm_roll" type="hinge" range="-1.6755 0.66322" class="XC430" axis="-1.0 0.0 0.0" />
+                <!-- 上臂质量：上臂本体 + elbow_yaw电机 -->
+                <inertial pos="5.2245e-05 -0.044558 -6.9389e-18" mass="0.05" fullinertia="2.9655e-06 7.601e-07 2.9597e-06 -1.0107e-08 5.1422e-19 7.1607e-22" />
+                <geom type="mesh" class="visual" mesh="right_upper_arm_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="upper_arm_roll_link_visual_material" />
+                <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_upper_arm_roll_link_visual" name="right_upper_arm_roll_link_collision" />
+                
+                <!-- 右肘连接件：承载forearm_roll电机，被elbow_yaw电机驱动 -->
+                <body name="right_elbow_yaw_link" pos="0.0 -0.0945 0.0" quat="1.0 0.0 0.0 0.0">
+                  <!-- elbow_yaw关节：肘部相对上臂的旋转，电机(2XL430)在上臂里 -->
+                  <joint name="right_elbow_yaw" type="hinge" range="-0.31416 3.2812" class="2XL430" axis="0.0 -1.0 0.0" />
+                  <!-- 肘连接件质量：外壳 + forearm_roll电机 -->
+                  <inertial pos="0.00035936 -0.008207 0.0021697" mass="0.01" fullinertia="2.6101e-07 1.6576e-07 2.5061e-07 4.2537e-08 -7.3444e-09 2.7561e-08" />
+                  <geom type="mesh" class="visual" mesh="right_elbow_yaw_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="elbow_yaw_link_visual_material" />
+                  <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_elbow_yaw_link_visual" name="right_elbow_yaw_link_collision" />
+                  
+                  <!-- 右前臂：承载hand_roll电机，被forearm_roll电机驱动 -->
+                  <body name="right_forearm_roll_link" pos="9e-05 -0.0215 0.0" quat="1.0 0.0 0.0 0.0">
+                    <!-- forearm_roll关节：前臂相对肘的前后旋转，电机(2XL430)在肘连接件里 -->
+                    <joint name="right_forearm_roll" type="hinge" range="-0.13963 1.7104" class="2XL430" axis="1.0 0.0 0.0" />
+                    <!-- 前臂质量：前臂本体 + hand_roll电机 -->
+                    <inertial pos="6.9538e-05 -0.035626 2.3366e-05" mass="0.05" fullinertia="1.9601e-06 4.5012e-07 1.957e-06 -1.0108e-08 2.5501e-12 2.7289e-09" />
+                    <geom type="mesh" class="visual" mesh="right_forearm_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="forearm_roll_link_visual_material" />
+                    <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_forearm_roll_link_visual" name="right_forearm_roll_link_collision" />
+                    
+                    <!-- 右手：被hand_roll电机驱动 -->
+                    <body name="right_hand_roll_link" pos="0.0 -0.082 0.0" quat="1.0 0.0 0.0 0.0">
+                      <!-- hand_roll关节：手相对前臂的旋转，电机(2XL430)在前臂里 -->
+                      <joint name="right_hand_roll" type="hinge" range="-0.40143 0.78539" class="2XL430" axis="0.0 0.0 -1.0" />
+                      <!-- 手质量：手掌 + 手指 -->
+                      <inertial pos="7.555e-08 -0.0088427 0.0017142" mass="0.01" fullinertia="8.5446e-08 1.8477e-08 8.4638e-08 -4.8403e-13 -5.3948e-13 -3.4903e-09" />
+                      <geom type="mesh" class="visual" mesh="right_hand_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="hand_roll_link_visual_material" />
+                      <geom type="mesh" class="collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" mesh="right_hand_roll_link_visual" name="right_hand_roll_link_collision" />
+                      <site name="right_hand_center" pos="0.0 0.0 0.0" type="sphere" size="0.005" rgba="0.9 0.1 0.1 0.8" />
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+  </worldbody>
+  <asset>
+    <mesh name="pelvis_visual" file="pelvis_visual.stl" />
+    <mesh name="left_hip_pitch_link_visual" file="left_hip_pitch_link_visual.stl" />
+    <mesh name="left_thigh_roll_link_visual" file="left_thigh_roll_link_visual.stl" />
+    <mesh name="left_knee_yaw_link_visual" file="left_knee_yaw_link_visual.stl" />
+    <mesh name="left_shank_pitch_link_visual" file="left_shank_pitch_link_visual.stl" />
+    <mesh name="left_ankle_pitch_link_visual" file="left_ankle_pitch_link_visual.stl" />
+    <mesh name="left_foot_roll_link_visual" file="left_foot_roll_link_visual.stl" />
+    <mesh name="right_hip_pitch_link_visual" file="right_hip_pitch_link_visual.stl" />
+    <mesh name="right_thigh_roll_link_visual" file="right_thigh_roll_link_visual.stl" />
+    <mesh name="right_knee_yaw_link_visual" file="right_knee_yaw_link_visual.stl" />
+    <mesh name="right_shank_pitch_link_visual" file="right_shank_pitch_link_visual.stl" />
+    <mesh name="right_ankle_pitch_link_visual" file="right_ankle_pitch_link_visual.stl" />
+    <mesh name="right_foot_roll_link_visual" file="right_foot_roll_link_visual.stl" />
+    <mesh name="lumbar2_yaw_link_visual" file="lumbar2_yaw_link_visual.stl" />
+    <mesh name="lumbar1_roll_link_visual" file="lumbar1_roll_link_visual.stl" />
+    <mesh name="chest_pitch_link_visual" file="chest_pitch_link_visual.stl" />
+    <mesh name="neck_yaw_link_visual" file="neck_yaw_link_visual.stl" />
+    <mesh name="left_shoulder_pitch_link_visual" file="left_shoulder_pitch_link_visual.stl" />
+    <mesh name="left_upper_arm_roll_link_visual" file="left_upper_arm_roll_link_visual.stl" />
+    <mesh name="left_elbow_yaw_link_visual" file="left_elbow_yaw_link_visual.stl" />
+    <mesh name="left_forearm_roll_link_visual" file="left_forearm_roll_link_visual.stl" />
+    <mesh name="left_hand_roll_link_visual" file="left_hand_roll_link_visual.stl" />
+    <mesh name="right_shoulder_pitch_link_visual" file="right_shoulder_pitch_link_visual.stl" />
+    <mesh name="right_upper_arm_roll_link_visual" file="right_upper_arm_roll_link_visual.stl" />
+    <mesh name="right_elbow_yaw_link_visual" file="right_elbow_yaw_link_visual.stl" />
+    <mesh name="right_forearm_roll_link_visual" file="right_forearm_roll_link_visual.stl" />
+    <mesh name="right_hand_roll_link_visual" file="right_hand_roll_link_visual.stl" />
+
+    <material name="pelvis_visual_material" rgba="0.84314 1 0.92549 1"/>
+    <material name="hip_pitch_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+    <material name="thigh_roll_link_visual_material" rgba="0.94118 0.71765 1 1"/>
+    <material name="knee_yaw_link_visual_material" rgba="0.99216 0.90588 1 1"/>
+    <material name="shank_pitch_link_visual_material" rgba="0.94118 0.71765 1 1"/>
+    <material name="ankle_pitch_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+    <material name="foot_roll_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+    <material name="lumbar2_yaw_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+    <material name="lumbar1_roll_link_visual_material" rgba="0 0.75294 0.29804 1"/>
+    <material name="chest_pitch_link_visual_material" rgba="0.58431 0.68627 0 1"/>
+    <material name="neck_yaw_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+    <material name="shoulder_pitch_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+    <material name="upper_arm_roll_link_visual_material" rgba="0.94118 0.71765 1 1"/>
+    <material name="elbow_yaw_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+    <material name="forearm_roll_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+    <material name="hand_roll_link_visual_material" rgba="0.79216 0.81961 0.93333 1"/>
+  </asset>
+  <actuator>
+    <position name="left_hip_pitch" joint="left_hip_pitch" kp="14.0" />
+    <position name="left_thigh_roll" joint="left_thigh_roll" kp="14.0" />
+    <position name="left_knee_yaw" joint="left_knee_yaw" kp="10.0" />
+    <position name="left_shank_pitch" joint="left_shank_pitch" kp="14.0" />
+    <position name="left_ankle_pitch" joint="left_ankle_pitch" kp="14.0" />
+    <position name="left_foot_roll" joint="left_foot_roll" kp="10.0" />
+    <position name="right_hip_pitch" joint="right_hip_pitch" kp="14.0" />
+    <position name="right_thigh_roll" joint="right_thigh_roll" kp="14.0" />
+    <position name="right_knee_yaw" joint="right_knee_yaw" kp="10.0" />
+    <position name="right_shank_pitch" joint="right_shank_pitch" kp="14.0" />
+    <position name="right_ankle_pitch" joint="right_ankle_pitch" kp="14.0" />
+    <position name="right_foot_roll" joint="right_foot_roll" kp="10.0" />
+    <position name="lumbar2_yaw" joint="lumbar2_yaw" kp="10.0" />
+    <position name="lumbar1_roll" joint="lumbar1_roll" kp="10.0" />
+    <position name="chest_pitch" joint="chest_pitch" kp="10.0" />
+    <position name="neck_yaw" joint="neck_yaw" kp="10.0" />
+    <position name="left_shoulder_pitch" joint="left_shoulder_pitch" kp="4.0" />
+    <position name="left_upper_arm_roll" joint="left_upper_arm_roll" kp="4.0" />
+    <position name="left_elbow_yaw" joint="left_elbow_yaw" kp="4.0" />
+    <position name="left_forearm_roll" joint="left_forearm_roll" kp="4.0" />
+    <position name="left_hand_roll" joint="left_hand_roll" kp="4.0" />
+    <position name="right_shoulder_pitch" joint="right_shoulder_pitch" kp="4.0" />
+    <position name="right_upper_arm_roll" joint="right_upper_arm_roll" kp="4.0" />
+    <position name="right_elbow_yaw" joint="right_elbow_yaw" kp="4.0" />
+    <position name="right_forearm_roll" joint="right_forearm_roll" kp="4.0" />
+    <position name="right_hand_roll" joint="right_hand_roll" kp="4.0" />
+  </actuator>
+  <contact>
+    <!-- 躯干排除 -->
+    <exclude body1="lumbar2_yaw_link" body2="lumbar1_roll_link"/>
+    <exclude body1="lumbar1_roll_link" body2="chest_pitch_link"/>
+    <exclude body1="chest_pitch_link" body2="neck_yaw_link"/>
+
+    <!-- 手臂排除 -->
+    <exclude body1="chest_pitch_link" body2="left_shoulder_pitch_link"/>
+    <exclude body1="chest_pitch_link" body2="right_shoulder_pitch_link"/>
+    <exclude body1="left_shoulder_pitch_link" body2="left_upper_arm_roll_link"/>
+    <exclude body1="left_upper_arm_roll_link" body2="left_elbow_yaw_link"/>
+    <exclude body1="left_elbow_yaw_link" body2="left_forearm_roll_link"/>
+    <exclude body1="left_forearm_roll_link" body2="left_hand_roll_link"/>
+    <exclude body1="right_shoulder_pitch_link" body2="right_upper_arm_roll_link"/>
+    <exclude body1="right_upper_arm_roll_link" body2="right_elbow_yaw_link"/>
+    <exclude body1="right_elbow_yaw_link" body2="right_forearm_roll_link"/>
+    <exclude body1="right_forearm_roll_link" body2="right_hand_roll_link"/>
+
+    <!-- 腿部排除 -->
+    <exclude body1="left_hip_pitch_link" body2="left_thigh_roll_link"/>
+    <exclude body1="left_thigh_roll_link" body2="left_knee_yaw_link"/>
+    <exclude body1="left_knee_yaw_link" body2="left_shank_pitch_link"/>
+    <exclude body1="left_shank_pitch_link" body2="left_ankle_pitch_link"/>
+    <exclude body1="left_ankle_pitch_link" body2="left_foot_roll_link"/>
+    <exclude body1="right_hip_pitch_link" body2="right_thigh_roll_link"/>
+    <exclude body1="right_thigh_roll_link" body2="right_knee_yaw_link"/>
+    <exclude body1="right_knee_yaw_link" body2="right_shank_pitch_link"/>
+    <exclude body1="right_shank_pitch_link" body2="right_ankle_pitch_link"/>
+    <exclude body1="right_ankle_pitch_link" body2="right_foot_roll_link"/>
+
+    <!-- 躯干与手臂 -->
+    <pair geom1="pelvis_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="pelvis_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="pelvis_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="pelvis_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="lumbar2_yaw_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="lumbar2_yaw_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="lumbar2_yaw_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="lumbar2_yaw_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="lumbar2_yaw_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="lumbar2_yaw_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="lumbar2_yaw_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="lumbar2_yaw_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="lumbar1_roll_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="lumbar1_roll_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="lumbar1_roll_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="lumbar1_roll_link_collision" geom2="right_forearm_roll_link_collision"/>
+
+    <!-- 头与手臂 -->
+    <pair geom1="neck_yaw_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="neck_yaw_link_collision" geom2="right_hand_roll_link_collision"/>
+
+    <!-- 手臂相互 -->
+    <pair geom1="left_upper_arm_roll_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="left_upper_arm_roll_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="right_upper_arm_roll_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="right_upper_arm_roll_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="left_forearm_roll_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="left_forearm_roll_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="right_forearm_roll_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="left_hand_roll_link_collision" geom2="right_hand_roll_link_collision"/>
+
+    <!-- 腿部相互 -->
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_thigh_roll_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_knee_yaw_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_shank_pitch_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_ankle_pitch_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_foot_roll_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_thigh_roll_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_knee_yaw_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_shank_pitch_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_ankle_pitch_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_foot_roll_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_thigh_roll_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_knee_yaw_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_shank_pitch_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_ankle_pitch_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_foot_roll_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_thigh_roll_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_knee_yaw_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_shank_pitch_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_ankle_pitch_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_foot_roll_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_thigh_roll_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_knee_yaw_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_shank_pitch_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_ankle_pitch_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_foot_roll_link_collision"/>
+
+    <!-- 腿部与躯干 -->
+    <pair geom1="left_thigh_roll_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="chest_pitch_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="chest_pitch_link_collision"/>
+
+    <!-- 腿部与头 -->
+    <pair geom1="left_thigh_roll_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="neck_yaw_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="neck_yaw_link_collision"/>
+
+    <!-- 单侧腿部与手臂 -->
+    <pair geom1="left_thigh_roll_link_collision" geom2="left_shoulder_pitch_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="left_shoulder_pitch_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="left_shoulder_pitch_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="left_shoulder_pitch_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="left_shoulder_pitch_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="left_hand_roll_link_collision"/>
+
+    <pair geom1="right_thigh_roll_link_collision" geom2="right_shoulder_pitch_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="right_shoulder_pitch_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="right_shoulder_pitch_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="right_shoulder_pitch_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="right_shoulder_pitch_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="right_hand_roll_link_collision"/>
+
+    <!-- 交叉腿部与手臂 -->
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="left_thigh_roll_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="left_knee_yaw_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="left_shank_pitch_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="left_ankle_pitch_link_collision" geom2="right_hand_roll_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_upper_arm_roll_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_elbow_yaw_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_forearm_roll_link_collision"/>
+    <pair geom1="left_foot_roll_link_collision" geom2="right_hand_roll_link_collision"/>
+
+    <pair geom1="right_thigh_roll_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="right_thigh_roll_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="right_knee_yaw_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="right_shank_pitch_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="right_ankle_pitch_link_collision" geom2="left_hand_roll_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="left_upper_arm_roll_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="left_elbow_yaw_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="left_forearm_roll_link_collision"/>
+    <pair geom1="right_foot_roll_link_collision" geom2="left_hand_roll_link_collision"/>
+  </contact>
+  <keyframe>
+    <key name="home"
+      qpos="-0.091312 0.0 0.0 -0.380812 -0.2895 0.0 0.091312 0.0 0.0 -0.380812 -0.2895 0.0 0.0 0.0 0.0 0.0 0.0 -1.5 -1.5 0.0 0.0 0.0 -1.5 1.5 0.0 0.0"
+      ctrl="-0.091312 0.0 0.0 -0.380812 -0.2895 0.0 0.091312 0.0 0.0 -0.380812 -0.2895 0.0 0.0 0.0 0.0 0.0 0.0 -1.5 -1.5 0.0 0.0 0.0 -1.5 1.5 0.0 0.0"/>
+  </keyframe>
+</mujoco>

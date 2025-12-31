@@ -1,0 +1,1555 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="urdf_figu">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.0098711 0.0059887 0.029373"
+        rpy="0 0 0" />
+      <mass
+        value="0.2" />
+      <inertia
+        ixx="2.5042E-05"
+        ixy="7.1498E-08"
+        ixz="6.9459E-06"
+        iyy="3.078E-05"
+        iyz="-4.1124E-07"
+        izz="1.0208E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.84314 1 0.92549 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="L_Leg_FB_Link">
+    <inertial>
+      <origin
+        xyz="-2.6833E-07 0.009638 0.002951"
+        rpy="0 0 0" />
+      <mass
+        value="0.02" />
+      <inertia
+        ixx="6.4929E-07"
+        ixy="-3.446E-12"
+        ixz="1.0255E-12"
+        iyy="7.9763E-07"
+        iyz="-2.0558E-08"
+        izz="7.7628E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Leg_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Leg_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Leg_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0.0202 0"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="L_Leg_FB_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-2.6005"
+      upper="0.7854"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Leg_LR_Link">
+    <inertial>
+      <origin
+        xyz="-5.5647E-07 4.9967E-07 -0.052401"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="5.1962E-06"
+        ixy="-2.1261E-11"
+        ixz="1.0802E-10"
+        iyy="5.2172E-06"
+        iyz="-9.5796E-11"
+        izz="1.0341E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Leg_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.94118 0.71765 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Leg_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Leg_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0.01975 0"
+      rpy="0 0 0" />
+    <parent
+      link="L_Leg_FB_Link" />
+    <child
+      link="L_Leg_LR_Link" />
+    <axis
+      xyz="-1 0 0" />
+    <limit
+      lower="-0.19199"
+      upper="1.2915"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Leg_Rev_Link">
+    <inertial>
+      <origin
+        xyz="0.0023183 -4.5894E-08 -0.012377"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="6.7808E-07"
+        ixy="4.6006E-12"
+        ixz="8.2811E-08"
+        iyy="6.2487E-07"
+        iyz="1.4645E-11"
+        izz="3.184E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Leg_Rev_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.99216 0.90588 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Leg_Rev_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Leg_Rev_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0 -0.116"
+      rpy="0 0 0" />
+    <parent
+      link="L_Leg_LR_Link" />
+    <child
+      link="L_Leg_Rev_Link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.3788"
+      upper="1.2217"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Knee_FB_Link">
+    <inertial>
+      <origin
+        xyz="7.3159E-07 -2.0817E-17 -0.074"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="5.8465E-06"
+        ixy="3.1089E-22"
+        ixz="-9.5858E-23"
+        iyy="5.8045E-06"
+        iyz="-2.1605E-10"
+        izz="1.4127E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Knee_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.94118 0.71765 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Knee_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Knee_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0.00015 -0.0266"
+      rpy="0 0 0" />
+    <parent
+      link="L_Leg_Rev_Link" />
+    <child
+      link="L_Knee_FB_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-2.1817"
+      upper="0.15708"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Foot_FB_Link">
+    <inertial>
+      <origin
+        xyz="0.0025325 -2.5318E-05 -0.0093107"
+        rpy="0 0 0" />
+      <mass
+        value="0.02" />
+      <inertia
+        ixx="5.6092E-07"
+        ixy="-3.538E-10"
+        ixz="2.9835E-08"
+        iyy="8.5837E-07"
+        iyz="1.3007E-09"
+        izz="1.0091E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Foot_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Foot_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Foot_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0 -0.148"
+      rpy="0 0 0" />
+    <parent
+      link="L_Knee_FB_Link" />
+    <child
+      link="L_Foot_FB_Link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-0.92502"
+      upper="0.47124"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Foot_LR_Link">
+    <inertial>
+      <origin
+        xyz="0.0016318 -4.0695E-05 -0.016092"
+        rpy="0 0 0" />
+      <mass
+        value="0.12" />
+      <inertia
+        ixx="2.2601E-05"
+        ixy="-4.0902E-07"
+        ixz="-7.3823E-07"
+        iyy="0.00013349"
+        iyz="5.9658E-08"
+        izz="0.00014347" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Foot_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Foot_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Foot_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="0.02355 0 -0.006"
+      rpy="0 0 0" />
+    <parent
+      link="L_Foot_FB_Link" />
+    <child
+      link="L_Foot_LR_Link" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-1.1694"
+      upper="0.89012"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Leg_FB_Link">
+    <inertial>
+      <origin
+        xyz="2.6833E-07 -0.009638 0.002951"
+        rpy="0 0 0" />
+      <mass
+        value="0.02" />
+      <inertia
+        ixx="6.4929E-07"
+        ixy="-3.446E-12"
+        ixz="-1.0255E-12"
+        iyy="7.9763E-07"
+        iyz="2.0558E-08"
+        izz="7.7628E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Leg_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Leg_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Leg_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 -0.0202 0"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="R_Leg_FB_Link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-0.7854"
+      upper="2.6005"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Leg_LR_Link">
+    <inertial>
+      <origin
+        xyz="-5.5647E-07 4.9967E-07 -0.052401"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="5.1962E-06"
+        ixy="-2.1261E-11"
+        ixz="1.0802E-10"
+        iyy="5.2172E-06"
+        iyz="-9.5796E-11"
+        izz="1.0341E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Leg_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.94118 0.71765 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Leg_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Leg_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="0 -0.01975 0"
+      rpy="0 0 0" />
+    <parent
+      link="R_Leg_FB_Link" />
+    <child
+      link="R_Leg_LR_Link" />
+    <axis
+      xyz="-1 0 0" />
+    <limit
+      lower="-0.15708"
+      upper="1.117"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Leg_Rev_Link">
+    <inertial>
+      <origin
+        xyz="0.0023183 -4.5894E-08 -0.012377"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="6.7808E-07"
+        ixy="4.6006E-12"
+        ixz="8.2811E-08"
+        iyy="6.2487E-07"
+        iyz="1.4645E-11"
+        izz="3.184E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Leg_Rev_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.99216 0.90588 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Leg_Rev_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Leg_Rev_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0 -0.116"
+      rpy="0 0 0" />
+    <parent
+      link="R_Leg_LR_Link" />
+    <child
+      link="R_Leg_Rev_Link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.2392"
+      upper="1.3788"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Kenn_FB_Link">
+    <inertial>
+      <origin
+        xyz="7.3159E-07 0 -0.074"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="5.8465E-06"
+        ixy="3.9188E-22"
+        ixz="-8.7175E-22"
+        iyy="5.8045E-06"
+        iyz="-2.1605E-10"
+        izz="1.4127E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Kenn_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.94118 0.71765 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Kenn_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Kenn_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0.00015 -0.0266"
+      rpy="0 0 0" />
+    <parent
+      link="R_Leg_Rev_Link" />
+    <child
+      link="R_Kenn_FB_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-2.1468"
+      upper="0.13963"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Foot_FB_Link">
+    <inertial>
+      <origin
+        xyz="0.0025325 -2.5318E-05 -0.0093107"
+        rpy="0 0 0" />
+      <mass
+        value="0.02" />
+      <inertia
+        ixx="5.6092E-07"
+        ixy="-3.538E-10"
+        ixz="2.9835E-08"
+        iyy="8.5837E-07"
+        iyz="1.3007E-09"
+        izz="1.0091E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Foot_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Foot_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Foot_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0 -0.148"
+      rpy="0 0 0" />
+    <parent
+      link="R_Kenn_FB_Link" />
+    <child
+      link="R_Foot_FB_Link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-0.925"
+      upper="0.47123"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Foot_LR_Link">
+    <inertial>
+      <origin
+        xyz="0.0016318 -4.0688E-05 -0.01614"
+        rpy="0 0 0" />
+      <mass
+        value="0.12" />
+      <inertia
+        ixx="2.2601E-05"
+        ixy="-4.0902E-07"
+        ixz="-7.3825E-07"
+        iyy="0.00013349"
+        iyz="5.9661E-08"
+        izz="0.00014347" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Foot_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Foot_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Foot_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="0.02355 0 -0.006"
+      rpy="0 0 0" />
+    <parent
+      link="R_Foot_FB_Link" />
+    <child
+      link="R_Foot_LR_Link" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-1.1694"
+      upper="0.89117"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Waist_Rev_Link">
+    <inertial>
+      <origin
+        xyz="3.1274E-10 8.979E-05 0.0099906"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="9.5806E-07"
+        ixy="-1.2755E-14"
+        ixz="2.2113E-14"
+        iyy="2.3717E-06"
+        iyz="6.7164E-09"
+        izz="2.0009E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/Waist_Rev_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/Waist_Rev_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Waist_Rev_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0821"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="Waist_Rev_Link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.47123"
+      upper="0.9599"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Waist_LR_Link">
+    <inertial>
+      <origin
+        xyz="3.4799E-05 2.1088E-09 0.0008473"
+        rpy="0 0 0" />
+      <mass
+        value="0.04" />
+      <inertia
+        ixx="3.8392E-06"
+        ixy="1.2831E-08"
+        ixz="-4.0309E-09"
+        iyy="3.1685E-06"
+        iyz="-3.1392E-13"
+        izz="2.7548E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/Waist_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0 0.75294 0.29804 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/Waist_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Waist_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0255"
+      rpy="0 0 0" />
+    <parent
+      link="Waist_Rev_Link" />
+    <child
+      link="Waist_LR_Link" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-0.45378"
+      upper="0.8203"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Waist_FB_Link">
+    <inertial>
+      <origin
+        xyz="9.1275E-05 2.3345E-05 0.024372"
+        rpy="0 0 0" />
+      <mass
+        value="0.09" />
+      <inertia
+        ixx="1.2525E-05"
+        ixy="-1.1242E-08"
+        ixz="-7.6108E-08"
+        iyy="6.6849E-06"
+        iyz="9.2183E-09"
+        izz="1.1304E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/Waist_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.58431 0.68627 0 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/Waist_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Waist_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0265"
+      rpy="0 0 0" />
+    <parent
+      link="Waist_LR_Link" />
+    <child
+      link="Waist_FB_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.1519"
+      upper="0.38397"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Neck_Rev_Link">
+    <inertial>
+      <origin
+        xyz="-0.011549 -7.6083E-06 0.071192"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="1.4377E-05"
+        ixy="2.5937E-09"
+        ixz="6.9222E-07"
+        iyy="1.0561E-05"
+        iyz="1.479E-08"
+        izz="8.4745E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/Neck_Rev_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/Neck_Rev_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Neck_Rev_jiont"
+    type="revolute">
+    <origin
+      xyz="0.0029 0 0.04605"
+      rpy="0 0 0" />
+    <parent
+      link="Waist_FB_Link" />
+    <child
+      link="Neck_Rev_Link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.3963"
+      upper="1.1868"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Barm_FB_Link">
+    <inertial>
+      <origin
+        xyz="-0.00072892 0.011921 0.001802"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="1.2496E-07"
+        ixy="-1.3328E-08"
+        ixz="-7.6451E-09"
+        iyy="8.4302E-08"
+        iyz="-6.5812E-10"
+        izz="1.1827E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Barm_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Barm_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Barm_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0.035 0.0355"
+      rpy="0 0 0" />
+    <parent
+      link="Waist_FB_Link" />
+    <child
+      link="L_Barm_FB_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-2.7576"
+      upper="-0.2618"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Barm_LR_Link">
+    <inertial>
+      <origin
+        xyz="-5.2245E-05 0.044558 6.9389E-18"
+        rpy="0 0 0" />
+      <mass
+        value="0.05" />
+      <inertia
+        ixx="2.9655E-06"
+        ixy="-1.0107E-08"
+        ixz="-5.1425E-19"
+        iyy="7.601E-07"
+        iyz="-9.8493E-22"
+        izz="2.9597E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Barm_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.94118 0.71765 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Barm_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Barm_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="-0.000110466661814119 0.0232499554836962 0"
+      rpy="0 0 0" />
+    <parent
+      link="L_Barm_FB_Link" />
+    <child
+      link="L_Barm_LR_Link" />
+    <axis
+      xyz="-1 0 0" />
+    <limit
+      lower="-1.4138"
+      upper="1.0472"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Sarm_Rev_Link">
+    <inertial>
+      <origin
+        xyz="-0.00035936 0.008207 0.0021697"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="2.6101E-07"
+        ixy="4.2537E-08"
+        ixz="7.3444E-09"
+        iyy="1.6576E-07"
+        iyz="-2.7561E-08"
+        izz="2.5061E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Sarm_Rev_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Sarm_Rev_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Sarm_Rev_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0.0945 0"
+      rpy="0 0 0" />
+    <parent
+      link="L_Barm_LR_Link" />
+    <child
+      link="L_Sarm_Rev_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-3.2812"
+      upper="0.31416"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Sarm_LR_Link">
+    <inertial>
+      <origin
+        xyz="6.9542E-05 0.035626 2.3366E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.04" />
+      <inertia
+        ixx="1.9601E-06"
+        ixy="1.0107E-08"
+        ixz="-2.5501E-12"
+        iyy="4.5012E-07"
+        iyz="-2.7289E-09"
+        izz="1.957E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Sarm_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Sarm_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Sarm_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="-9E-05 0.0215 0"
+      rpy="0 0 0" />
+    <parent
+      link="L_Sarm_Rev_Link" />
+    <child
+      link="L_Sarm_LR_Link" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-0.13963"
+      upper="1.7104"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="L_Wrist_Link">
+    <inertial>
+      <origin
+        xyz="-7.555E-08 0.0088427 0.0017142"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="8.5446E-08"
+        ixy="-4.8403E-13"
+        ixz="5.3948E-13"
+        iyy="1.8477E-08"
+        iyz="3.4903E-09"
+        izz="8.4638E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Wrist_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/L_Wrist_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_Wrist_jiont"
+    type="revolute">
+    <origin
+      xyz="0 0.082 0"
+      rpy="0 0 0" />
+    <parent
+      link="L_Sarm_LR_Link" />
+    <child
+      link="L_Wrist_Link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.78539"
+      upper="0.40143"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Barm_FB_Link">
+    <inertial>
+      <origin
+        xyz="0.00072892 -0.011921 0.001802"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="1.2496E-07"
+        ixy="-1.3328E-08"
+        ixz="7.6451E-09"
+        iyy="8.4302E-08"
+        iyz="6.5812E-10"
+        izz="1.1827E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Barm_FB_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Barm_FB_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Barm_FB_jiont"
+    type="revolute">
+    <origin
+      xyz="0 -0.035 0.0355"
+      rpy="0 0 0" />
+    <parent
+      link="Waist_FB_Link" />
+    <child
+      link="R_Barm_FB_Link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="0.34906"
+      upper="2.6354"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Barm_LR_Link">
+    <inertial>
+      <origin
+        xyz="5.2245E-05 -0.044558 -6.9389E-18"
+        rpy="0 0 0" />
+      <mass
+        value="0.05" />
+      <inertia
+        ixx="2.9655E-06"
+        ixy="-1.0107E-08"
+        ixz="5.1422E-19"
+        iyy="7.601E-07"
+        iyz="7.1607E-22"
+        izz="2.9597E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Barm_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.94118 0.71765 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Barm_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Barm_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="0.000110466661814126 -0.0232499554836964 0"
+      rpy="0 0 0" />
+    <parent
+      link="R_Barm_FB_Link" />
+    <child
+      link="R_Barm_LR_Link" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-1.6755"
+      upper="0.66322"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Sarm_Rev_Link">
+    <inertial>
+      <origin
+        xyz="0.00035936 -0.008207 0.0021697"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="2.6101E-07"
+        ixy="4.2537E-08"
+        ixz="-7.3444E-09"
+        iyy="1.6576E-07"
+        iyz="2.7561E-08"
+        izz="2.5061E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Sarm_Rev_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Sarm_Rev_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Sarm_Rev_jiont"
+    type="revolute">
+    <origin
+      xyz="0 -0.0945000000000203 0"
+      rpy="0 0 0" />
+    <parent
+      link="R_Barm_LR_Link" />
+    <child
+      link="R_Sarm_Rev_Link" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="0.017453"
+      upper="3.4732"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Sarm_LR_Link">
+    <inertial>
+      <origin
+        xyz="6.9538E-05 -0.035626 2.3366E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.05" />
+      <inertia
+        ixx="1.9601E-06"
+        ixy="-1.0108E-08"
+        ixz="2.5501E-12"
+        iyy="4.5012E-07"
+        iyz="2.7289E-09"
+        izz="1.957E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Sarm_LR_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.94118 0.71765 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Sarm_LR_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Sarm_LR_jiont"
+    type="revolute">
+    <origin
+      xyz="8.99999945208259E-05 -0.0215000163375803 0"
+      rpy="0 0 0" />
+    <parent
+      link="R_Sarm_Rev_Link" />
+    <child
+      link="R_Sarm_LR_Link" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-0.087266"
+      upper="1.8326"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="R_Wrist_Link">
+    <inertial>
+      <origin
+        xyz="7.555E-08 -0.0088427 0.0017142"
+        rpy="0 0 0" />
+      <mass
+        value="0.01" />
+      <inertia
+        ixx="8.5446E-08"
+        ixy="-4.8403E-13"
+        ixz="-5.3948E-13"
+        iyy="1.8477E-08"
+        iyz="-3.4903E-09"
+        izz="8.4638E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Wrist_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://urdf_figu/meshes/R_Wrist_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_Wrist_jiont"
+    type="revolute">
+    <origin
+      xyz="0 -0.082 0"
+      rpy="0 0 0" />
+    <parent
+      link="R_Sarm_LR_Link" />
+    <child
+      link="R_Wrist_Link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.01745"
+      upper="0.19199"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>

@@ -1,0 +1,59 @@
+# STL File Rename Mapping: figurobot_2nd (SolidWorks) -> toddlerbot_2xc style
+# Source: figurobot_2nd/solidwork/meshes/*.STL
+# Target: figurobot_2nd/assets/*.stl
+# 
+# Naming convention transformation:
+#   SolidWorks: L_/R_ + Part + FB/LR/Rev + _Link.STL
+#   toddlerbot: left/right + part + pitch/roll/yaw + link_visual.stl
+#   FB (Front-Back) -> pitch
+#   LR (Left-Right) -> roll
+#   Rev (Revolution) -> yaw
+
+# Base (pelvis area)
+base_link.STL: pelvis_visual.stl
+
+# Waist (pelvis area)
+Waist_Rev_Link.STL: lumbar2_yaw_link_visual.stl  # Waist yaw
+Waist_LR_Link.STL: lumbar1_roll_link_visual.stl  # Waist roll
+Waist_FB_Link.STL: chest_pitch_link_visual.stl    # Waist pitch
+
+# Neck and Head
+Neck_Rev_Link.STL: neck_yaw_link_visual.stl
+
+# Left Leg
+L_Leg_FB_Link.STL: left_hip_pitch_link_visual.stl
+L_Leg_LR_Link.STL: left_thigh_roll_link_visual.stl
+L_Leg_Rev_Link.STL: left_knee_yaw_link_visual.stl
+L_Knee_FB_Link.STL: left_shank_pitch_link_visual.stl
+L_Foot_FB_Link.STL: left_ankle_pitch_link_visual.stl
+L_Foot_LR_Link.STL: left_foot_roll_link_visual.stl
+
+# Right Leg
+R_Leg_FB_Link.STL: right_hip_pitch_link_visual.stl
+R_Leg_LR_Link.STL: right_thigh_roll_link_visual.stl
+R_Leg_Rev_Link.STL: right_knee_yaw_link_visual.stl
+R_Kenn_FB_Link.STL: right_shank_pitch_link_visual.stl  # Note: typo in original (Kenn->Knee)
+R_Foot_FB_Link.STL: right_ankle_pitch_link_visual.stl
+R_Foot_LR_Link.STL: right_foot_roll_link_visual.stl
+
+# Left Arm
+L_Barm_FB_Link.STL: left_shoulder_pitch_link_visual.stl      # Big arm pitch -> elbow roll
+L_Barm_LR_Link.STL: left_upper_arm_roll_link_visual.stl  # Big arm roll -> shoulder pitch
+L_Sarm_Rev_Link.STL: left_elbow_yaw_link_visual.stl  # Shoulder yaw
+L_Sarm_LR_Link.STL: left_forearm_roll_link_visual.stl   # Shoulder roll
+L_Wrist_Link.STL: left_hand_roll_link_visual.stl
+
+# Right Arm
+R_Barm_FB_Link.STL: right_shoulder_pitch_link_visual.stl      # Big arm pitch -> elbow roll
+R_Barm_LR_Link.STL: right_upper_arm_roll_link_visual.stl  # Big arm roll -> shoulder pitch
+R_Sarm_Rev_Link.STL: right_elbow_yaw_link_visual.stl  # Shoulder yaw
+R_Sarm_LR_Link.STL: right_forearm_roll_link_visual.stl   # Shoulder roll
+R_Wrist_Link.STL: right_hand_roll_link_visual.stl
+
+# Note: The following toddlerbot files don't have direct equivalents in figurobot_2nd
+# (these are additional components in toddlerbot design):
+# - *_gear_drive_visual.stl (except waist ones mapped above)
+# - *_collision.stl files
+# - hand models
+# - neck_pitch_plate_visual.stl, neck_rod*.stl
+# - elbow_yaw, wrist_gear_drive models
