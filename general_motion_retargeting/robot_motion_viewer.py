@@ -53,6 +53,8 @@ class RobotMotionViewer:
                 video_path=None,
                 video_width=640,
                 video_height=480,
+                show_left_ui=False,
+                show_right_ui=False,
                 keyboard_callback=None,
                 ):
         
@@ -73,10 +75,10 @@ class RobotMotionViewer:
         self.viewer = mjv.launch_passive(
             model=self.model,
             data=self.data,
-            show_left_ui=False,
-            show_right_ui=False, 
-            key_callback=keyboard_callback
-            )      
+            show_left_ui=show_left_ui,
+            show_right_ui=show_right_ui,
+            key_callback=keyboard_callback,
+        )
 
         self.viewer.opt.flags[mj.mjtVisFlag.mjVIS_TRANSPARENT] = transparent_robot
         
