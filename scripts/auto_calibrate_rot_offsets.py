@@ -35,11 +35,54 @@ def _avg_quats_wxyz(quats: List[np.ndarray]) -> Optional[np.ndarray]:
 	return _normalize_quat_wxyz(acc)
 
 
+def _quat_angle_deg(q1_wxyz: np.ndarray, q2_wxyz: np.ndarray) -> float:
+	q1 = _normalize_quat_wxyz(q1_wxyz)
+	q2 = _normalize_quat_wxyz(q2_wxyz)
+	d = float(abs(np.dot(q1, q2)))
+	d = float(np.clip(d, -1.0, 1.0))
+	# 2*acos(|dot|)
+	return float(np.degrees(2.0 * np.arccos(d)))
+
+
+def _avg_quats_wxyz_robust(
+	quats: List[np.ndarray],
+	*,
+	trim_frac: float = 0.0,
+	max_angle_deg: Optional[float] = None,
+) -> Optional[np.ndarray]:
+	if not quats:
+		return None
+	trim_frac = float(np.clip(trim_frac, 0.0, 0.49))
+	q0 = _avg_quats_wxyz(quats)
+	if q0 is None:
+		return None
+	# Compute angular deviations from initial mean.
+	angles = [(_quat_angle_deg(q, q0), i) for i, q in enumerate(quats)]
+	angles.sort(key=lambda x: x[0])
+	kept = angles
+	if max_angle_deg is not None:
+		max_angle_deg = float(max_angle_deg)
+		kept = [ai for ai in kept if ai[0] <= max_angle_deg]
+	if trim_frac > 0.0 and kept:
+		k = int(round(len(kept) * (1.0 - trim_frac)))
+		k = max(1, k)
+		kept = kept[:k]
+	return _avg_quats_wxyz([quats[i] for _a, i in kept])
+
+
 def _force_w_positive(q: np.ndarray) -> np.ndarray:
 	q = np.asarray(q, dtype=float)
 	if float(q[0]) < 0.0:
 		return -q
 	return q
+
+
+def _heading_yaw_from_quat_wxyz(q_wxyz: np.ndarray) -> float:
+	"""Return yaw (around +Z) in radians, using scipy's zyx convention."""
+	r = R.from_quat(q_wxyz, scalar_first=True)
+	# zyx -> [yaw, pitch, roll]
+	yaw = float(r.as_euler("zyx", degrees=False)[0])
+	return yaw
 
 
 def _load_ik_config(path: str) -> Dict:
@@ -100,12 +143,52 @@ def main():
 		default=1,
 		help="How many BVH frames to use for calibration (starting from frame 0).",
 	)
+	parser.add_argument(
+		"--frame_indices",
+		nargs="*",
+		type=int,
+		default=None,
+		help=(
+			"Optional explicit BVH frame indices to use for calibration (overrides --calib_max_frames/--select_*). "
+			"Example: --frame_indices 0 10 20"
+		),
+	)
+
+	parser.add_argument(
+		"--select_mode",
+		choices=["first", "closest_to_first", "upright"],
+		default="first",
+		help=(
+			"How to select frames from the first --calib_max_frames frames. "
+			"'first' uses frames [0..N). 'closest_to_first' picks the K frames most similar to frame 0. "
+			"'upright' picks the K frames with smallest hip/spine pitch+roll magnitude."
+		),
+	)
+	parser.add_argument(
+		"--select_k",
+		type=int,
+		default=None,
+		help=(
+			"If set, use only K frames from the selection pool (see --select_mode). "
+			"Smaller K often matches the 'manual constant offsets' better."
+		),
+	)
 
 	parser.add_argument(
 		"--solve_max_iter",
 		type=int,
 		default=20,
 		help="Max IK iterations per BVH frame in calibration solve.",
+	)
+
+	parser.add_argument(
+		"--ori_cost",
+		type=float,
+		default=0.05,
+		help=(
+			"Orientation cost used for all calibration tasks (targets the raw human rotations, no offsets). "
+			"Set to 0 to disable orientation constraints (not recommended if you want stable offsets)."
+		),
 	)
 
 	parser.add_argument(
@@ -118,7 +201,7 @@ def main():
 	parser.add_argument(
 		"--reset_qpos_each_frame",
 		action="store_true",
-		default=True,
+		default=False,
 		help="Reset robot qpos to initial state before solving each calibration BVH frame.",
 	)
 	parser.add_argument(
@@ -130,8 +213,41 @@ def main():
 	parser.add_argument(
 		"--w_positive",
 		action="store_true",
-		default=True,
+		default=False,
 		help="If set, flip quaternion sign so w>=0 (cosmetic; same rotation).",
+	)
+
+	parser.add_argument(
+		"--remove_heading",
+		action="store_true",
+		default=True,
+		help=(
+			"(Legacy) Equivalent to --root_basis yaw. Kept for backward compatibility."
+		),
+	)
+
+	parser.add_argument(
+		"--root_basis",
+		choices=["none", "yaw", "full"],
+		default=None,
+		help=(
+			"Change-of-basis applied when computing rot_offset: "
+			"'none' uses world rotations; 'yaw' removes human root yaw; 'full' removes full human root rotation. "
+			"This can make offsets closer to constant manual tables."
+		),
+	)
+
+	parser.add_argument(
+		"--trim_frac",
+		type=float,
+		default=0.2,
+		help="Outlier rejection: keep the closest (1-trim_frac) quats to the mean before averaging.",
+	)
+	parser.add_argument(
+		"--max_angle_deg",
+		type=float,
+		default=45.0,
+		help="Outlier rejection: drop per-frame quats with angle-to-mean larger than this (degrees).",
 	)
 	parser.add_argument(
 		"--only_frames",
@@ -163,8 +279,68 @@ def main():
 			raise ValueError("--only_frames did not match any ik_match_table1 keys")
 
 	bvh_frames, actual_human_height = load_bvh_file(args.bvh_file, format=args.format)
-	if args.calib_max_frames is not None:
-		bvh_frames = bvh_frames[: max(1, int(args.calib_max_frames))]
+	if args.frame_indices:
+		idx = [int(i) for i in args.frame_indices]
+		idx = [i for i in idx if 0 <= i < len(bvh_frames)]
+		if not idx:
+			raise ValueError("--frame_indices are all out of range")
+		bvh_frames = [bvh_frames[i] for i in idx]
+	else:
+		if args.calib_max_frames is not None:
+			bvh_frames = bvh_frames[: max(1, int(args.calib_max_frames))]
+
+	if args.frame_indices is None and args.select_k is not None:
+		k = int(args.select_k)
+		k = max(1, min(k, len(bvh_frames)))
+		if args.select_mode == "first":
+			bvh_frames = bvh_frames[:k]
+		elif args.select_mode == "closest_to_first":
+			# Pick frames closest to frame 0 by joint orientation similarity.
+			ref = bvh_frames[0]
+			# Prefer joints that exist in lafan1 and are informative.
+			key_joints = [
+				"Hips",
+				"Spine2",
+				"LeftUpLeg",
+				"RightUpLeg",
+				"LeftLeg",
+				"RightLeg",
+				"LeftArm",
+				"RightArm",
+			]
+			ref_quats = {j: ref[j][1] for j in key_joints if j in ref}
+			if not ref_quats:
+				bvh_frames = bvh_frames[:k]
+			else:
+				scored = []
+				for i, fr in enumerate(bvh_frames):
+					angles = []
+					for j, q_ref in ref_quats.items():
+						if j not in fr:
+							continue
+						q = fr[j][1]
+						angles.append(_quat_angle_deg(q, q_ref))
+					score = float(np.mean(angles)) if angles else float("inf")
+					scored.append((score, i))
+				scored.sort(key=lambda x: x[0])
+				keep_idx = sorted([i for _s, i in scored[:k]])
+				bvh_frames = [bvh_frames[i] for i in keep_idx]
+		else:
+			# 'upright': small pitch/roll on hips+spine2.
+			def pr_cost(frame):
+				cost = 0.0
+				for name in ("Hips", "Spine2"):
+					if name not in frame:
+						continue
+					_qpos, q = frame[name]
+					yaw, pitch, roll = R.from_quat(q, scalar_first=True).as_euler("zyx", degrees=False)
+					cost += float(abs(pitch) + abs(roll))
+				return cost
+
+			scored = [(pr_cost(fr), i) for i, fr in enumerate(bvh_frames)]
+			scored.sort(key=lambda x: x[0])
+			keep_idx = sorted([i for _s, i in scored[:k]])
+			bvh_frames = [bvh_frames[i] for i in keep_idx]
 
 	retargeter = GMR(
 		src_human=src_human,
@@ -172,15 +348,15 @@ def main():
 		actual_human_height=actual_human_height,
 	)
 
-	# Build calibration tasks: position-only (orientation_cost=0) so the solver doesn't
-	# "eat" the offset via orientation constraints.
+	# Build calibration tasks. We target the *raw human rotation* (no offsets) with a small
+	# orientation cost so the robot orientations are not underdetermined.
 	calib_tasks: Dict[str, mink.FrameTask] = {}
 	for frame_name in target_frame_names:
 		calib_tasks[frame_name] = mink.FrameTask(
 			frame_name=frame_name,
 			frame_type="body",
 			position_cost=float(args.pos_cost),
-			orientation_cost=0.0,
+			orientation_cost=float(args.ori_cost),
 			lm_damping=1,
 		)
 
@@ -204,7 +380,9 @@ def main():
 				retargeter.configuration.data.qpos[:] = initial_qpos
 				mj.mj_forward(retargeter.model, retargeter.configuration.data)
 
-			# Set targets (position-only). We still provide rotation in SE3 target but orientation_cost=0.
+			# Set targets. Orientation target is the raw human rotation (no offsets).
+			# NOTE: We intentionally do NOT apply any heading removal to the IK targets.
+			# Heading removal is applied only when computing rot_offset as a change-of-basis.
 			for frame_name in target_frame_names:
 				entry = table1.get(frame_name)
 				if entry is None:
@@ -234,6 +412,21 @@ def main():
 				mj.mj_forward(retargeter.model, retargeter.configuration.data)
 
 			# Compute rot_offset = inv(R_human) * R_robot.
+			basis_R = R.identity()
+			basis_mode = args.root_basis
+			if basis_mode is None:
+				basis_mode = "yaw" if args.remove_heading else "none"
+			if basis_mode != "none":
+				root_name = str(ik.get("human_root_name", "Hips"))
+				if root_name in hd:
+					_root_pos, root_quat = hd[root_name]
+					root_R = R.from_quat(root_quat, scalar_first=True)
+					if basis_mode == "yaw":
+						yaw = _heading_yaw_from_quat_wxyz(root_quat)
+						basis_R = R.from_euler("z", -yaw, degrees=False)
+					elif basis_mode == "full":
+						basis_R = root_R.inv()
+			# Apply change-of-basis: R' = B * R
 			for frame_name in target_frame_names:
 				entry = table1.get(frame_name)
 				if entry is None:
@@ -248,16 +441,20 @@ def main():
 					continue
 
 				_pos, human_quat = hd[human_body_name]
-				human_R = R.from_quat(human_quat, scalar_first=True)
+				human_R = basis_R * R.from_quat(human_quat, scalar_first=True)
 				robot_xmat = retargeter.configuration.data.xmat[body_id].reshape(3, 3)
-				robot_R = R.from_matrix(robot_xmat)
+				robot_R = basis_R * R.from_matrix(robot_xmat)
 				rot_offset = (human_R.inv() * robot_R).as_quat(scalar_first=True)
 				per_frame_quats[frame_name].append(np.asarray(rot_offset, dtype=float))
 
 		updated = 0
 		out_offsets: Dict[str, np.ndarray] = {}
 		for frame_name, qs in per_frame_quats.items():
-			q_avg = _avg_quats_wxyz(qs)
+			q_avg = _avg_quats_wxyz_robust(
+				qs,
+				trim_frac=float(args.trim_frac),
+				max_angle_deg=float(args.max_angle_deg) if args.max_angle_deg is not None else None,
+			)
 			if q_avg is None:
 				continue
 			if args.w_positive:
@@ -294,9 +491,17 @@ def main():
 		"bvh_file": args.bvh_file,
 		"format": args.format,
 		"robot": args.robot,
-		"calib_max_frames": int(args.calib_max_frames),
+		"calib_max_frames": int(args.calib_max_frames) if args.calib_max_frames is not None else None,
+		"frame_indices": args.frame_indices,
+		"select_mode": args.select_mode,
+		"select_k": args.select_k,
 		"iters": int(args.iters),
 		"only_frames": args.only_frames,
+		"pos_cost": float(args.pos_cost),
+		"ori_cost": float(args.ori_cost),
+		"root_basis": args.root_basis if args.root_basis is not None else ("yaw" if args.remove_heading else "none"),
+		"trim_frac": float(args.trim_frac),
+		"max_angle_deg": float(args.max_angle_deg) if args.max_angle_deg is not None else None,
 		"skipped_last_iter": skipped,
 	}
 

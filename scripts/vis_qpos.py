@@ -115,6 +115,17 @@ def main():
             for k, v in raw.items()
         }
 
+    robot_frame_to_human_body = None
+    if args.ik_config is not None and os.path.exists(args.ik_config):
+        try:
+            with open(args.ik_config, "r", encoding="utf-8") as f:
+                _ik = json.load(f)
+            table = _ik.get("ik_match_table1", {})
+            if isinstance(table, dict) and table:
+                robot_frame_to_human_body = {k: v[0] for k, v in table.items() if isinstance(v, list) and v}
+        except Exception:
+            robot_frame_to_human_body = None
+
     viewer = None
     initial_qpos = None
 
@@ -184,6 +195,7 @@ def main():
         return out
 
     edit_state = {"enabled": True, "sel": 0, "joint_infos": [], "pending": None}
+    joint_frame_state = {"mode": "all"}  # 'all' or 'selected'
 
     def _apply_delta(ji, direction: float):
         """Apply an edit to qpos.
@@ -235,6 +247,13 @@ def main():
             print(f"[joint-edit] selected {edit_state['sel']}/{len(jis)-1}: {ji['name']}")
             return
 
+        if ch == 'f':
+            joint_frame_state["mode"] = (
+                "selected" if joint_frame_state["mode"] == "all" else "all"
+            )
+            print(f"[joint-frames] mode: {joint_frame_state['mode']} (toggle with 'f')")
+            return
+
         # Queue edits; apply in the main loop to avoid MuJoCo thread-safety issues.
         if ch in ('=', '+'):
             edit_state["pending"] = ("delta", edit_state["sel"], +1.0)
@@ -259,7 +278,9 @@ def main():
     )
 
     if args.show_body_frames:
-        viewer.viewer.opt.frame = mj.mjtFrame.mjFRAME_BODY
+        # MuJoCo version differences: some builds don't expose mjFRAME_JOINT.
+        # We draw joint frames ourselves via user_scn geoms.
+        viewer.viewer.opt.frame = mj.mjtFrame.mjFRAME_NONE
 
     # Initialize pose once, then DO NOT overwrite qpos each frame.
     # This keeps the viewer interactive so you can adjust joints in the UI.
@@ -328,6 +349,7 @@ def main():
             print("  - '+' / '-' : increase/decrease selected joint")
             print("  - '0' or 'r': reset selected joint to initial")
             print("  - 'p'       : print selected joint info")
+            print("  - 'f'       : toggle robot joint frames: all <-> selected")
             print(f"  - step size : {args.joint_step} (set via --joint_step)")
             print(f"  - root trans step : {args.root_step_trans} (set via --root_step_trans)")
             print(f"  - root rot step(deg): {args.root_step_rot_deg} (set via --root_step_rot_deg)")
@@ -393,9 +415,98 @@ def main():
                 mj.mj_step(viewer.model, viewer.data)
             else:
                 mj.mj_forward(viewer.model, viewer.data)
+
+            # Robot joint frame visibility mode:
+            # - all: draw frames for all (non-ball) joints
+            # - selected: draw only the selected joint frame
+            viewer.viewer.user_scn.ngeom = 0
+
+            sel_human_target = None
+            sel_body_id = None
+            sel_jid = None
+            if edit_state["joint_infos"]:
+                ji = edit_state["joint_infos"][edit_state["sel"]]
+                try:
+                    jid = int(ji["jid"])
+                    sel_jid = jid
+                    sel_body_id = int(viewer.model.jnt_bodyid[jid])
+                    sel_body_name = viewer.model.body(sel_body_id).name
+                    if robot_frame_to_human_body is not None:
+                        sel_human_target = robot_frame_to_human_body.get(sel_body_name)
+                        if sel_human_target is None:
+                            # Fallback: sometimes the key matches the joint name.
+                            sel_human_target = robot_frame_to_human_body.get(ji.get("name"))
+                except Exception:
+                    sel_body_id = None
+                    sel_jid = None
+                    sel_human_target = None
+
+            def _draw_joint_frame(jid: int, size: float = 0.06) -> None:
+                # Draw an approximate joint coordinate frame.
+                # Origin at joint anchor; Z axis along joint axis.
+                try:
+                    jtype = int(viewer.model.jnt_type[jid])
+                except Exception:
+                    return
+                if jtype == int(mj.mjtJoint.mjJNT_BALL):
+                    return
+
+                try:
+                    body_id = int(viewer.model.jnt_bodyid[jid])
+                    body_R = np.array(viewer.data.xmat[body_id], dtype=float).reshape(3, 3)
+                    body_p = np.array(viewer.data.xpos[body_id], dtype=float)
+                except Exception:
+                    return
+
+                if jtype == int(mj.mjtJoint.mjJNT_FREE):
+                    # Free joint: just show the body frame.
+                    draw_frame(body_p, body_R, viewer.viewer, size=size, joint_name=None)
+                    return
+
+                jpos_local = np.array(viewer.model.jnt_pos[jid], dtype=float)
+                axis_local = np.array(viewer.model.jnt_axis[jid], dtype=float)
+                pos = body_p + body_R @ jpos_local
+                z = body_R @ axis_local
+                nz = float(np.linalg.norm(z))
+                if nz < 1e-9:
+                    z = np.array([0.0, 0.0, 1.0])
+                else:
+                    z = z / nz
+                x0 = np.array([1.0, 0.0, 0.0])
+                if abs(float(np.dot(x0, z))) > 0.9:
+                    x0 = np.array([0.0, 1.0, 0.0])
+                x = np.cross(x0, z)
+                nx = float(np.linalg.norm(x))
+                if nx < 1e-9:
+                    x = np.array([1.0, 0.0, 0.0])
+                else:
+                    x = x / nx
+                y = np.cross(z, x)
+                mat = np.stack([x, y, z], axis=1)
+                draw_frame(pos, mat, viewer.viewer, size=size, joint_name=None)
+
+            if args.show_body_frames:
+                if joint_frame_state["mode"] == "selected":
+                    # If user selected a pseudo root_* entry, sel_jid points to the free joint.
+                    if sel_jid is not None:
+                        _draw_joint_frame(int(sel_jid), size=0.10)
+                else:
+                    # Draw all joints. Keep within the user_scn geom budget.
+                    # Each frame uses 3 geoms.
+                    max_frames = max(1, int((viewer.viewer.user_scn.maxgeom - viewer.viewer.user_scn.ngeom) / 3))
+                    count = 0
+                    for jid in range(int(viewer.model.njnt)):
+                        if count >= max_frames:
+                            break
+                        # Skip ball joints to avoid confusing axes.
+                        if int(viewer.model.jnt_type[jid]) == int(mj.mjtJoint.mjJNT_BALL):
+                            continue
+                        _draw_joint_frame(jid, size=0.06)
+                        count += 1
+
+            # Draw target frames (if any). This is independent of the robot joint-frame toggle.
             if targets is not None:
-                viewer.viewer.user_scn.ngeom = 0
-                for name, (pos, quat) in targets.items():
+                for _name, (pos, quat) in targets.items():
                     draw_frame(
                         pos,
                         R.from_quat(quat, scalar_first=True).as_matrix(),
