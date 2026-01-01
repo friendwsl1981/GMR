@@ -111,5 +111,5 @@ VIEWER_CAM_DISTANCE_DICT = {
     "pnd_adam_lite": 3.0,
     "tienkung": 3.0,
     "pal_talos": 3.0,
-    "figurobot_2nd": 1.5,
+    "figurobot_2nd": 1.0,
 }

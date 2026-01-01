@@ -1,6 +1,8 @@
 import argparse
 import pathlib
 import time
+import sys
+import select
 from general_motion_retargeting import GeneralMotionRetargeting as GMR
 from general_motion_retargeting import RobotMotionViewer
 from general_motion_retargeting.utils.lafan1 import load_bvh_file
@@ -8,6 +10,8 @@ from rich import print
 from tqdm import tqdm
 import os
 import numpy as np
+import json
+from scipy.spatial.transform import Rotation as R
 
 if __name__ == "__main__":
     
@@ -76,6 +80,40 @@ if __name__ == "__main__":
         default=None,
         type=int,
         help="Maximum number of frames to process.",
+    )
+
+    parser.add_argument(
+        "--pause_after_first_frame",
+        action="store_true",
+        default=False,
+        help="Pause after rendering the first frame (after viewer.sync). Useful for comparing coordinate frames.",
+    )
+
+    parser.add_argument(
+        "--dump_qpos",
+        default=None,
+        type=str,
+        help="Dump the first frame's full mujoco qpos (root + joints) to a .npy file.",
+    )
+
+    parser.add_argument(
+        "--dump_rot_offsets",
+        default=None,
+        type=str,
+        help=(
+            "Dump suggested rot_offset (wxyz) for each ik_match_table1 entry to a JSON file. "
+            "Computed from first frame as: R_offset = inv(R_human) * R_robot."
+        ),
+    )
+
+    parser.add_argument(
+        "--dump_target_frames",
+        default=None,
+        type=str,
+        help=(
+            "Dump the BVH-driven target frames shown in viewer1 (retargeter.scaled_human_data) to JSON. "
+            "This can be loaded into the second viewer to manually align robot joint frames."
+        ),
     )
     
     args = parser.parse_args()
@@ -146,6 +184,31 @@ if __name__ == "__main__":
 
         # retarget
         qpos = retargeter.retarget(smplx_data)
+
+        if args.dump_qpos is not None:
+            dump_dir = os.path.dirname(args.dump_qpos)
+            if dump_dir:
+                os.makedirs(dump_dir, exist_ok=True)
+            np.save(args.dump_qpos, qpos)
+            print(f"Dumped qpos to {args.dump_qpos}")
+            args.dump_qpos = None
+
+        if args.dump_target_frames is not None:
+            dump_dir = os.path.dirname(args.dump_target_frames)
+            if dump_dir:
+                os.makedirs(dump_dir, exist_ok=True)
+            # retargeter.scaled_human_data: {human_body_name: (pos, quat_wxyz)}
+            payload = {
+                k: {
+                    "pos": [float(x) for x in v[0]],
+                    "quat": [float(x) for x in v[1]],
+                }
+                for k, v in retargeter.scaled_human_data.items()
+            }
+            with open(args.dump_target_frames, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2, ensure_ascii=False)
+            print(f"Dumped target frames to {args.dump_target_frames}")
+            args.dump_target_frames = None
         
 
         # visualize
@@ -158,6 +221,84 @@ if __name__ == "__main__":
             follow_camera=True,
             # human_pos_offset=np.array([0.0, 0.0, 0.0])
         )
+
+        if args.dump_rot_offsets is not None:
+            dump_dir = os.path.dirname(args.dump_rot_offsets)
+            if dump_dir:
+                os.makedirs(dump_dir, exist_ok=True)
+
+            suggested_table = {}
+            missing = []
+            for frame_name, entry in retargeter.ik_match_table1.items():
+                human_body_name, pos_weight, rot_weight, pos_offset, _rot_offset = entry
+
+                if human_body_name not in retargeter.scaled_human_data:
+                    missing.append((frame_name, human_body_name, "human_missing"))
+                    continue
+
+                try:
+                    body_id = robot_motion_viewer.model.body(frame_name).id
+                except Exception:
+                    missing.append((frame_name, human_body_name, "robot_body_missing"))
+                    continue
+
+                _, human_quat_wxyz = retargeter.scaled_human_data[human_body_name]
+                human_R = R.from_quat(human_quat_wxyz, scalar_first=True)
+
+                robot_xmat = robot_motion_viewer.data.xmat[body_id].reshape(3, 3)
+                robot_R = R.from_matrix(robot_xmat)
+
+                rot_offset = (human_R.inv() * robot_R).as_quat(scalar_first=True)
+                rot_offset = [float(x) for x in rot_offset]
+
+                suggested_table[frame_name] = [
+                    human_body_name,
+                    pos_weight,
+                    rot_weight,
+                    pos_offset,
+                    rot_offset,
+                ]
+
+            payload = {
+                "robot_root_name": retargeter.robot_root_name,
+                "human_root_name": retargeter.human_root_name,
+                "ground_height": float(np.linalg.norm(retargeter.ground)),
+                "human_height_assumption": None,
+                "use_ik_match_table1": True,
+                "use_ik_match_table2": False,
+                "human_scale_table": retargeter.human_scale_table,
+                "ik_match_table1": suggested_table,
+            }
+
+            with open(args.dump_rot_offsets, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2, ensure_ascii=False)
+
+            print(f"Dumped suggested rot_offsets to {args.dump_rot_offsets}")
+            if missing:
+                print(f"[yellow]Skipped {len(missing)} entries (missing human body or robot body).[/yellow]")
+                for item in missing[:10]:
+                    print("  ", item)
+                if len(missing) > 10:
+                    print("  ...")
+            args.dump_rot_offsets = None
+
+        if args.pause_after_first_frame:
+            args.pause_after_first_frame = False
+            print("Paused after first frame. Press Enter to continue...")
+            # Keep rendering so the window stays interactive (camera/mouse), and poll stdin for Enter.
+            while True:
+                robot_motion_viewer.step(
+                    root_pos=qpos[:3],
+                    root_rot=qpos[3:7],
+                    dof_pos=qpos[7:],
+                    human_motion_data=retargeter.scaled_human_data,
+                    rate_limit=False,
+                    follow_camera=False,
+                )
+                if select.select([sys.stdin], [], [], 0.0)[0]:
+                    sys.stdin.readline()
+                    break
+                time.sleep(1.0 / 60.0)
 
         if args.loop:
             i = (i + 1) % len(lafan1_data_frames)

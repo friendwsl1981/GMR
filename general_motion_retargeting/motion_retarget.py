@@ -85,12 +85,17 @@ class GeneralMotionRetargeting:
         self.solver = solver
         self.damping = damping
 
-        self.human_body_to_task1 = {}
-        self.human_body_to_task2 = {}
-        self.pos_offsets1 = {}
-        self.rot_offsets1 = {}
-        self.pos_offsets2 = {}
-        self.rot_offsets2 = {}
+        # NOTE: We key tasks and offsets by *robot frame_name* (not human body name).
+        # This allows one human body to drive multiple robot tasks (one-to-many mapping)
+        # without overwriting tasks/offsets.
+        self.frame_to_task1 = {}
+        self.frame_to_task2 = {}
+        self.frame_to_human_body1 = {}
+        self.frame_to_human_body2 = {}
+        self.frame_pos_offsets1 = {}
+        self.frame_rot_offsets1 = {}
+        self.frame_pos_offsets2 = {}
+        self.frame_rot_offsets2 = {}
 
         self.task_errors1 = {}
         self.task_errors2 = {}
@@ -120,11 +125,10 @@ class GeneralMotionRetargeting:
                     orientation_cost=rot_weight,
                     lm_damping=1,
                 )
-                self.human_body_to_task1[body_name] = task
-                self.pos_offsets1[body_name] = np.array(pos_offset) - self.ground
-                self.rot_offsets1[body_name] = R.from_quat(
-                    rot_offset, scalar_first=True
-                )
+                self.frame_to_task1[frame_name] = task
+                self.frame_to_human_body1[frame_name] = body_name
+                self.frame_pos_offsets1[frame_name] = np.array(pos_offset) - self.ground
+                self.frame_rot_offsets1[frame_name] = R.from_quat(rot_offset, scalar_first=True)
                 self.tasks1.append(task)
                 self.task_errors1[task] = []
         
@@ -138,40 +142,64 @@ class GeneralMotionRetargeting:
                     orientation_cost=rot_weight,
                     lm_damping=1,
                 )
-                self.human_body_to_task2[body_name] = task
-                self.pos_offsets2[body_name] = np.array(pos_offset) - self.ground
-                self.rot_offsets2[body_name] = R.from_quat(
-                    rot_offset, scalar_first=True
-                )
+                self.frame_to_task2[frame_name] = task
+                self.frame_to_human_body2[frame_name] = body_name
+                self.frame_pos_offsets2[frame_name] = np.array(pos_offset) - self.ground
+                self.frame_rot_offsets2[frame_name] = R.from_quat(rot_offset, scalar_first=True)
                 self.tasks2.append(task)
                 self.task_errors2[task] = []
+
+    def _apply_task_offsets(self, pos, quat, pos_offset, rot_offset: R):
+        """Apply (rot_offset then pos_offset in local frame) to a single human pose.
+
+        This matches the behavior of `offset_human_data` but is applied per-task so the same
+        human body can drive multiple tasks with different offsets.
+        """
+        updated_quat = (R.from_quat(quat, scalar_first=True) * rot_offset).as_quat(
+            scalar_first=True
+        )
+        global_pos_offset = R.from_quat(updated_quat, scalar_first=True).apply(pos_offset)
+        return pos + global_pos_offset, updated_quat
 
   
     def update_targets(self, human_data, offset_to_ground=False):
         # scale human data in local frame
         human_data = self.to_numpy(human_data)
         human_data = self.scale_human_data(human_data, self.human_root_name, self.human_scale_table)
-        human_data = self.offset_human_data(human_data, self.pos_offsets1, self.rot_offsets1)
         human_data = self.apply_ground_offset(human_data)
         if offset_to_ground:
             human_data = self.offset_human_data_to_ground(human_data)
         self.scaled_human_data = human_data
 
         if self.use_ik_match_table1:
-            for body_name in self.human_body_to_task1.keys():
-                task = self.human_body_to_task1[body_name]
+            identity_rot = R.identity()
+            zero_offset = np.zeros(3)
+            for frame_name, task in self.frame_to_task1.items():
+                body_name = self.frame_to_human_body1[frame_name]
                 if body_name not in human_data:
                     continue
                 pos, rot = human_data[body_name]
-                task.set_target(mink.SE3.from_rotation_and_translation(mink.SO3(rot), pos))
+                pos_offset = self.frame_pos_offsets1.get(frame_name, zero_offset)
+                rot_offset = self.frame_rot_offsets1.get(frame_name, identity_rot)
+                target_pos, target_quat = self._apply_task_offsets(pos, rot, pos_offset, rot_offset)
+                task.set_target(
+                    mink.SE3.from_rotation_and_translation(mink.SO3(target_quat), target_pos)
+                )
         
         if self.use_ik_match_table2:
-            for body_name in self.human_body_to_task2.keys():
-                task = self.human_body_to_task2[body_name]
+            identity_rot = R.identity()
+            zero_offset = np.zeros(3)
+            for frame_name, task in self.frame_to_task2.items():
+                body_name = self.frame_to_human_body2[frame_name]
                 if body_name not in human_data:
                     continue
                 pos, rot = human_data[body_name]
-                task.set_target(mink.SE3.from_rotation_and_translation(mink.SO3(rot), pos))
+                pos_offset = self.frame_pos_offsets2.get(frame_name, zero_offset)
+                rot_offset = self.frame_rot_offsets2.get(frame_name, identity_rot)
+                target_pos, target_quat = self._apply_task_offsets(pos, rot, pos_offset, rot_offset)
+                task.set_target(
+                    mink.SE3.from_rotation_and_translation(mink.SO3(target_quat), target_pos)
+                )
             
             
     def retarget(self, human_data, offset_to_ground=False):
@@ -314,7 +342,8 @@ class GeneralMotionRetargeting:
         self.ground_offset = ground_offset
 
     def apply_ground_offset(self, human_data):
-        for body_name in human_data.keys():
-            pos, quat = human_data[body_name]
-            human_data[body_name][0] = pos - np.array([0, 0, self.ground_offset])
+        # `human_data` may contain tuples (pos, quat) depending on upstream processing.
+        # Avoid in-place item assignment on tuple entries; always reassign to a mutable list.
+        for body_name, (pos, quat) in list(human_data.items()):
+            human_data[body_name] = [pos - np.array([0, 0, self.ground_offset]), quat]
         return human_data
