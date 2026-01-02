@@ -90,10 +90,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--dump_qpos",
+        "--pause_at_frame",
+        type=int,
         default=None,
-        type=str,
-        help="Dump the first frame's full mujoco qpos (root + joints) to a .npy file.",
+        help="Pause at the specified frame number (0-based). Useful for inspecting specific frames.",
     )
 
     parser.add_argument(
@@ -114,6 +114,13 @@ if __name__ == "__main__":
             "Dump the BVH-driven target frames shown in viewer1 (retargeter.scaled_human_data) to JSON. "
             "This can be loaded into the second viewer to manually align robot joint frames."
         ),
+    )
+
+    parser.add_argument(
+        "--dump_qpos",
+        default=None,
+        type=str,
+        help="Dump the first frame's full mujoco qpos (root + joints) to a .npy file.",
     )
     
     args = parser.parse_args()
@@ -285,6 +292,24 @@ if __name__ == "__main__":
         if args.pause_after_first_frame:
             args.pause_after_first_frame = False
             print("Paused after first frame. Press Enter to continue...")
+            # Keep rendering so the window stays interactive (camera/mouse), and poll stdin for Enter.
+            while True:
+                robot_motion_viewer.step(
+                    root_pos=qpos[:3],
+                    root_rot=qpos[3:7],
+                    dof_pos=qpos[7:],
+                    human_motion_data=retargeter.scaled_human_data,
+                    rate_limit=False,
+                    follow_camera=False,
+                )
+                if select.select([sys.stdin], [], [], 0.0)[0]:
+                    sys.stdin.readline()
+                    break
+                time.sleep(1.0 / 60.0)
+
+        if args.pause_at_frame is not None and i == args.pause_at_frame:
+            args.pause_at_frame = None
+            print(f"Paused at frame {i}. Press Enter to continue...")
             # Keep rendering so the window stays interactive (camera/mouse), and poll stdin for Enter.
             while True:
                 robot_motion_viewer.step(

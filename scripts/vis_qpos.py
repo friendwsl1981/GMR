@@ -43,7 +43,7 @@ def main():
         "--show_ui",
         action="store_true",
         default=False,
-        help="Show MuJoCo left/right UI panels so you can manually adjust joint states.",
+        help="Show the MuJoCo LEFT UI panel so you can manually adjust joint states. (Right panel is hidden.)",
     )
 
     parser.add_argument(
@@ -97,7 +97,58 @@ def main():
         help="If set, dump rot_offset(wxyz) per ik_match_table1 frame_name when you exit (Ctrl-C or close window).",
     )
 
+    parser.add_argument(
+        "--dump_updated_ik_config_out",
+        default=None,
+        type=str,
+        help=(
+            "If set, write a full ik_config JSON on exit with updated rot_offset entries (same structure as --ik_config). "
+            "Convenient for directly replacing the config."
+        ),
+    )
+
+    parser.add_argument(
+        "--dump_update_tables",
+        choices=["table1", "table2", "both"],
+        default="table1",
+        help="Which tables to update in --dump_updated_ik_config_out: ik_match_table1, ik_match_table2, or both.",
+    )
+
+    parser.add_argument(
+        "--dump_root_basis",
+        choices=["none", "yaw", "full"],
+        default="yaw",
+        help=(
+            "Change-of-basis applied when dumping rot_offsets, matching scripts/auto_calibrate_rot_offsets.py. "
+            "'none' uses world rotations; 'yaw' removes human root yaw; 'full' removes full human root rotation."
+        ),
+    )
+
+    parser.add_argument(
+        "--dump_w_positive",
+        action="store_true",
+        default=False,
+        help="If set, flip dumped quaternion sign so w>=0 (cosmetic; same rotation).",
+    )
+
+    parser.add_argument(
+        "--dump_match_config_sign",
+        action="store_true",
+        default=True,
+        help=(
+            "If set (default), choose between q and -q so the dumped quaternion is closest to the ik_config's "
+            "existing rot_offset entry (stable JSON diffs). Ignored if --dump_w_positive is set."
+        ),
+    )
+
     args = parser.parse_args()
+
+    # Convenience: if user is already dumping rot_offsets but didn't provide an explicit
+    # updated-config output path, write one next to outputs/ for easy replacement.
+    if args.dump_rot_offsets_out is not None and args.dump_updated_ik_config_out is None and args.ik_config:
+        base = os.path.basename(str(args.ik_config))
+        stem = base[:-5] if base.lower().endswith(".json") else base
+        args.dump_updated_ik_config_out = os.path.join("outputs", f"{stem}.manual.json")
 
     if not os.path.exists(args.qpos):
         raise FileNotFoundError(args.qpos)
@@ -116,6 +167,7 @@ def main():
         }
 
     robot_frame_to_human_body = None
+    ik_match_table1 = None
     if args.ik_config is not None and os.path.exists(args.ik_config):
         try:
             with open(args.ik_config, "r", encoding="utf-8") as f:
@@ -123,8 +175,10 @@ def main():
             table = _ik.get("ik_match_table1", {})
             if isinstance(table, dict) and table:
                 robot_frame_to_human_body = {k: v[0] for k, v in table.items() if isinstance(v, list) and v}
+                ik_match_table1 = table
         except Exception:
             robot_frame_to_human_body = None
+            ik_match_table1 = None
 
     viewer = None
     initial_qpos = None
@@ -196,6 +250,7 @@ def main():
 
     edit_state = {"enabled": True, "sel": 0, "joint_infos": [], "pending": None}
     joint_frame_state = {"mode": "all"}  # 'all' or 'selected'
+    ik_body_frame_state = {"mode": "off"}  # 'off' | 'selected' | 'all'
 
     def _apply_delta(ji, direction: float):
         """Apply an edit to qpos.
@@ -254,6 +309,17 @@ def main():
             print(f"[joint-frames] mode: {joint_frame_state['mode']} (toggle with 'f')")
             return
 
+        if ch == 'g':
+            # Cycle IK body-frame overlay: off -> selected -> all -> off
+            if ik_body_frame_state["mode"] == "off":
+                ik_body_frame_state["mode"] = "selected"
+            elif ik_body_frame_state["mode"] == "selected":
+                ik_body_frame_state["mode"] = "all"
+            else:
+                ik_body_frame_state["mode"] = "off"
+            print(f"[ik-body-frames] mode: {ik_body_frame_state['mode']} (cycle with 'g')")
+            return
+
         # Queue edits; apply in the main loop to avoid MuJoCo thread-safety issues.
         if ch in ('=', '+'):
             edit_state["pending"] = ("delta", edit_state["sel"], +1.0)
@@ -273,7 +339,7 @@ def main():
         motion_fps=30,
         transparent_robot=0,
         show_left_ui=args.show_ui,
-        show_right_ui=args.show_ui,
+        show_right_ui=False,
         keyboard_callback=keyboard_callback,
     )
 
@@ -302,18 +368,74 @@ def main():
 
     edit_state["joint_infos"] = build_editable_joint_list(viewer.model)
 
+    # If user is in "manual calibration" mode (dumping offsets), default to showing IK body frames
+    # so what you align visually matches what gets dumped.
+    if args.dump_rot_offsets_out is not None and ik_match_table1 is not None:
+        ik_body_frame_state["mode"] = "all"
+
+    def _heading_yaw_from_quat_wxyz(q_wxyz: np.ndarray) -> float:
+        r = R.from_quat(q_wxyz, scalar_first=True)
+        # zyx -> [yaw, pitch, roll]
+        return float(r.as_euler("zyx", degrees=False)[0])
+
+    def _force_w_positive(q_wxyz: np.ndarray) -> np.ndarray:
+        q_wxyz = np.asarray(q_wxyz, dtype=float)
+        if float(q_wxyz[0]) < 0.0:
+            return -q_wxyz
+        return q_wxyz
+
+    def _normalize_quat_wxyz(q_wxyz: np.ndarray) -> np.ndarray:
+        q_wxyz = np.asarray(q_wxyz, dtype=float)
+        n = float(np.linalg.norm(q_wxyz))
+        if n <= 0.0:
+            return np.array([1.0, 0.0, 0.0, 0.0], dtype=float)
+        return q_wxyz / n
+
+    dumped_once = {"done": False}
+
+    def _write_json(path: str, payload) -> None:
+        dump_dir = os.path.dirname(path)
+        if dump_dir:
+            os.makedirs(dump_dir, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+
     def dump_offsets_if_requested():
-        if args.dump_rot_offsets_out is None:
+        if dumped_once["done"]:
+            return
+        if args.dump_rot_offsets_out is None and args.dump_updated_ik_config_out is None:
             return
         if args.ik_config is None or targets is None:
-            raise ValueError("--dump_rot_offsets_out requires --ik_config and --targets")
+            raise ValueError("Dumping requires --ik_config and --targets")
 
         with open(args.ik_config, "r", encoding="utf-8") as f:
             ik = json.load(f)
-        table = ik.get("ik_match_table1", {})
+        table1 = ik.get("ik_match_table1", {})
+        table2 = ik.get("ik_match_table2", {})
+
+        # We'll always compute offsets based on table1 mapping (frame_name -> human_body). If table2 exists
+        # and you choose to update it, we update entries with the same keys.
+        if not isinstance(table1, dict) or not table1:
+            raise ValueError("ik_match_table1 missing or empty in --ik_config")
+
         out = {}
         skipped = []
-        for frame_name, entry in table.items():
+
+        # Match auto-calib: apply a change-of-basis when computing rot_offset.
+        basis_R = R.identity()
+        basis_mode = str(args.dump_root_basis)
+        if basis_mode != "none":
+            root_name = str(ik.get("human_root_name", "Hips"))
+            if root_name in targets:
+                root_quat = np.asarray(targets[root_name][1], dtype=float)
+                root_R = R.from_quat(root_quat, scalar_first=True)
+                if basis_mode == "yaw":
+                    yaw = _heading_yaw_from_quat_wxyz(root_quat)
+                    basis_R = R.from_euler("z", -yaw, degrees=False)
+                elif basis_mode == "full":
+                    basis_R = root_R.inv()
+
+        for frame_name, entry in table1.items():
             human_body_name = entry[0]
             if human_body_name not in targets:
                 skipped.append((frame_name, human_body_name, "target_missing"))
@@ -324,23 +446,74 @@ def main():
                 skipped.append((frame_name, human_body_name, "robot_body_missing"))
                 continue
             human_quat = targets[human_body_name][1]
-            human_R = R.from_quat(human_quat, scalar_first=True)
-            robot_R = R.from_matrix(viewer.data.xmat[body_id].reshape(3, 3))
+            human_R = basis_R * R.from_quat(human_quat, scalar_first=True)
+            robot_R = basis_R * R.from_matrix(viewer.data.xmat[body_id].reshape(3, 3))
             rot_offset = (human_R.inv() * robot_R).as_quat(scalar_first=True)
+            rot_offset = _normalize_quat_wxyz(rot_offset)
+
+            if args.dump_w_positive:
+                rot_offset = _force_w_positive(rot_offset)
+            elif args.dump_match_config_sign:
+                # Stabilize sign to match the config entry style: pick hemisphere closest to existing rot_offset.
+                try:
+                    ref = np.asarray(entry[4], dtype=float)
+                    ref = _normalize_quat_wxyz(ref)
+                    if float(np.dot(ref, rot_offset)) < 0.0:
+                        rot_offset = -rot_offset
+                except Exception:
+                    pass
+
             out[frame_name] = [float(x) for x in rot_offset]
 
-        dump_dir = os.path.dirname(args.dump_rot_offsets_out)
-        if dump_dir:
-            os.makedirs(dump_dir, exist_ok=True)
-        with open(args.dump_rot_offsets_out, "w", encoding="utf-8") as f:
-            json.dump({"rot_offsets_wxyz": out, "skipped": skipped}, f, indent=2, ensure_ascii=False)
-        print(f"Dumped rot_offsets to {args.dump_rot_offsets_out}")
-        if skipped:
-            print(f"[yellow]Skipped {len(skipped)} entries (missing target or robot body).[/yellow]")
+        if args.dump_rot_offsets_out is not None:
+            _write_json(args.dump_rot_offsets_out, {"rot_offsets_wxyz": out, "skipped": skipped})
+            print(f"Dumped rot_offsets to {args.dump_rot_offsets_out}")
+            if skipped:
+                print(f"[yellow]Skipped {len(skipped)} entries (missing target or robot body).[/yellow]")
+
+        if args.dump_updated_ik_config_out is not None:
+            out_ik = dict(ik)
+            update_tables = str(args.dump_update_tables)
+
+            def _apply_updates_to_table(table_dict: dict) -> dict:
+                if not isinstance(table_dict, dict):
+                    return table_dict
+                new_table = dict(table_dict)
+                for frame_name, entry in new_table.items():
+                    if not (isinstance(entry, list) and len(entry) >= 5):
+                        continue
+                    q = out.get(frame_name)
+                    if q is None:
+                        continue
+                    new_entry = list(entry)
+                    new_entry[4] = q
+                    new_table[frame_name] = new_entry
+                return new_table
+
+            if update_tables in ("table1", "both"):
+                out_ik["ik_match_table1"] = _apply_updates_to_table(table1)
+            if update_tables in ("table2", "both"):
+                out_ik["ik_match_table2"] = _apply_updates_to_table(table2)
+
+            out_ik["_manual_calib"] = {
+                "source_ik_config": args.ik_config,
+                "qpos": args.qpos,
+                "targets": args.targets,
+                "dump_root_basis": str(args.dump_root_basis),
+                "dump_w_positive": bool(args.dump_w_positive),
+                "dump_match_config_sign": bool(args.dump_match_config_sign),
+                "dump_update_tables": update_tables,
+                "skipped": skipped,
+            }
+
+            _write_json(args.dump_updated_ik_config_out, out_ik)
+            print(f"Wrote updated ik_config to {args.dump_updated_ik_config_out}")
+
+        dumped_once["done"] = True
 
     try:
         if args.show_ui:
-            print("Interactive viewer: UI panels are visible.")
+            print("Interactive viewer: LEFT UI panel is visible (right panel hidden).")
         else:
             print("Viewer UI is hidden.")
         if edit_state["joint_infos"]:
@@ -350,6 +523,8 @@ def main():
             print("  - '0' or 'r': reset selected joint to initial")
             print("  - 'p'       : print selected joint info")
             print("  - 'f'       : toggle robot joint frames: all <-> selected")
+            if ik_match_table1 is not None:
+                print("  - 'g'       : cycle IK body frames: off -> selected -> all")
             print(f"  - step size : {args.joint_step} (set via --joint_step)")
             print(f"  - root trans step : {args.root_step_trans} (set via --root_step_trans)")
             print(f"  - root rot step(deg): {args.root_step_rot_deg} (set via --root_step_rot_deg)")
@@ -370,6 +545,8 @@ def main():
             print("Overlaying target frames (viewer1) as colored axes.")
         if args.dump_rot_offsets_out is not None:
             print("Will dump rot_offsets on exit.")
+        if args.dump_updated_ik_config_out is not None:
+            print("Will dump updated ik_config on exit.")
 
         while True:
             # Apply queued edits (main thread only).
@@ -502,6 +679,40 @@ def main():
                         if int(viewer.model.jnt_type[jid]) == int(mj.mjtJoint.mjJNT_BALL):
                             continue
                         _draw_joint_frame(jid, size=0.06)
+                        count += 1
+
+            # Draw IK body frames (these are the frames used for dumping rot_offsets).
+            if ik_match_table1 is not None and ik_body_frame_state["mode"] != "off":
+                if ik_body_frame_state["mode"] == "selected":
+                    # Only draw the body frame corresponding to the currently selected joint's body (if present).
+                    if sel_body_id is not None:
+                        try:
+                            sel_body_name = viewer.model.body(int(sel_body_id)).name
+                        except Exception:
+                            sel_body_name = None
+                        if sel_body_name is not None and sel_body_name in ik_match_table1:
+                            try:
+                                bid = viewer.model.body(sel_body_name).id
+                                pos = np.array(viewer.data.xpos[bid], dtype=float)
+                                mat = np.array(viewer.data.xmat[bid], dtype=float).reshape(3, 3)
+                                draw_frame(pos, mat, viewer.viewer, size=0.12, joint_name=None)
+                            except Exception:
+                                pass
+                else:
+                    # Draw all IK frames, respecting geom budget.
+                    keys = list(ik_match_table1.keys())
+                    max_frames = max(1, int((viewer.viewer.user_scn.maxgeom - viewer.viewer.user_scn.ngeom) / 3))
+                    count = 0
+                    for frame_name in keys:
+                        if count >= max_frames:
+                            break
+                        try:
+                            bid = viewer.model.body(frame_name).id
+                        except Exception:
+                            continue
+                        pos = np.array(viewer.data.xpos[bid], dtype=float)
+                        mat = np.array(viewer.data.xmat[bid], dtype=float).reshape(3, 3)
+                        draw_frame(pos, mat, viewer.viewer, size=0.06, joint_name=None)
                         count += 1
 
             # Draw target frames (if any). This is independent of the robot joint-frame toggle.
