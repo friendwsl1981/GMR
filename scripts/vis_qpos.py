@@ -110,7 +110,7 @@ def main():
     parser.add_argument(
         "--dump_update_tables",
         choices=["table1", "table2", "both"],
-        default="table1",
+        default="both",
         help="Which tables to update in --dump_updated_ik_config_out: ik_match_table1, ik_match_table2, or both.",
     )
 
