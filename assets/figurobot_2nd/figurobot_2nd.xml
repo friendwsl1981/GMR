@@ -52,7 +52,7 @@
         <!-- 左大腿：承载hip_yaw电机，被hip_roll电机驱动 -->
         <body name="left_thigh_roll_link" pos="0.0 0.01975 0.0" quat="1.0 0.0 0.0 0.0">
           <!-- hip_roll关节：大腿相对大腿根的左右摆动(外展/内收)，电机(2XC430)在大腿根里 -->
-          <joint name="left_thigh_roll" type="hinge" range="-0.19199 1.2915" class="2XC430" axis="-1.0 0.0 0.0" />
+          <joint name="left_thigh_roll" type="hinge" range="-1.2915 0.19199" class="2XC430" axis="-1.0 0.0 0.0" />
           <!-- 大腿质量：大腿本体 + hip_yaw电机 -->
           <inertial pos="-5.5647e-07 4.9967e-07 -0.052401" mass="0.07" fullinertia="5.1962e-06 5.2172e-06 1.0341e-06 -2.1261e-11 1.0802e-10 -9.5796e-11" />
           <geom type="mesh" class="visual" mesh="left_thigh_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="thigh_roll_link_visual_material" />
@@ -114,7 +114,7 @@
         <!-- 右大腿：承载hip_yaw电机，被hip_roll电机驱动 -->
         <body name="right_thigh_roll_link" pos="0.0 -0.01975 0.0" quat="1.0 0.0 0.0 0.0">
           <!-- hip_roll关节：大腿相对大腿根的左右摆动(外展/内收)，电机(2XC430)在大腿根里 -->
-          <joint name="right_thigh_roll" type="hinge" range="-0.19199 1.2915" class="2XC430" axis="1.0 0.0 0.0" />
+          <joint name="right_thigh_roll" type="hinge" range="-1.2915 0.19199" class="2XC430" axis="1.0 0.0 0.0" />
           <!-- 大腿质量：大腿本体 + hip_yaw电机 -->
           <inertial pos="-5.5647e-07 -4.9967e-07 -0.052401" mass="0.07" fullinertia="5.1962e-06 5.2172e-06 1.0341e-06 -2.1261e-11 -1.0802e-10 -9.5796e-11" />
           <geom type="mesh" class="visual" mesh="right_thigh_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="thigh_roll_link_visual_material" />
@@ -176,7 +176,7 @@
         <!-- 腰椎1：承载pitch电机，被roll电机驱动 -->
         <body name="lumbar1_roll_link" pos="0.0 0.0 0.0255" quat="1.0 0.0 0.0 0.0">
           <!-- lumbar1_roll关节：腰椎1相对腰椎2的左右侧倾，电机在腰椎2里 -->
-          <joint name="lumbar1_roll" type="hinge" range="-0.45378 0.8203" axis="-1.0 0.0 0.0" />
+          <joint name="lumbar1_roll" type="hinge" range="-0.157 0.157" axis="1.0 0.0 0.0" />
           <!-- 腰椎1质量：外壳 + pitch电机 -->
           <inertial pos="3.4799e-05 2.1088e-09 0.0008473" mass="0.04" fullinertia="3.8392e-06 3.1685e-06 2.7548e-06 1.2831e-08 -4.0309e-09 -3.1392e-13" />
           <geom type="mesh" class="visual" mesh="lumbar1_roll_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" material="lumbar1_roll_link_visual_material" />
