@@ -1,0 +1,149 @@
+# Motor Hardware Configuration for figurobot_2nd
+# This file maps each motor in motor_ordering to its actual Dynamixel hardware ID
+# and tracks whether the motor is physically connected and online.
+#
+# IMPORTANT: The order of motors in this array MUST match the order in motor_ordering
+# from default_figurobot.yml. Do not reorder entries.
+#
+# Fields:
+#   name: Motor name (must match motor_ordering for verification)
+#   hardware_id: Actual Dynamixel servo ID (1-253)
+#   online: Whether the motor is physically connected and functioning
+#           If false, this motor's data will be filled with default values
+
+motor_hardware:
+  # Left Leg (6 motors)
+  - name: left_hip_pitch
+    joint_index: 0
+    hardware_id: 19
+    online: true
+    
+  - name: left_thigh_roll
+    joint_index: 1
+    hardware_id: 21
+    online: true
+    
+  - name: left_knee_yaw
+    joint_index: 2
+    hardware_id: 22
+    online: true
+    
+  - name: left_shank_pitch
+    joint_index: 3
+    hardware_id: 23
+    online: true
+    
+  - name: left_ankle_pitch
+    joint_index: 4
+    hardware_id: 24
+    online: true
+    
+  - name: left_foot_roll
+    joint_index: 5
+    hardware_id: 25
+    online: true
+
+  # Right Leg (6 motors)
+  - name: right_hip_pitch
+    joint_index: 6
+    hardware_id: 20
+    online: true
+    
+  - name: right_thigh_roll
+    joint_index: 7
+    hardware_id: 26
+    online: true
+    
+  - name: right_knee_yaw
+    joint_index: 8
+    hardware_id: 27
+    online: true
+    
+  - name: right_shank_pitch
+    joint_index: 9
+    hardware_id: 28
+    online: true
+    
+  - name: right_ankle_pitch
+    joint_index: 10
+    hardware_id: 29
+    online: true
+    
+  - name: right_foot_roll
+    joint_index: 11
+    hardware_id: 30
+    online: true
+
+  # Waist (3 motors)
+  - name: lumbar2_yaw
+    joint_index: 12
+    hardware_id: 16
+    online: true
+    
+  - name: lumbar1_roll
+    joint_index: 13
+    hardware_id: 17
+    online: true
+    
+  - name: chest_pitch
+    joint_index: 14
+    hardware_id: 15
+    online: true
+
+  # Neck (1 motor)
+  - name: neck_yaw
+    joint_index: 15
+    hardware_id: 12
+    online: true
+
+  # Left Arm (5 motors)
+  - name: left_shoulder_pitch
+    joint_index: 16
+    hardware_id: 13
+    online: true
+    
+  - name: left_upper_arm_roll
+    joint_index: 17
+    hardware_id: 1
+    online: true
+    
+  - name: left_elbow_yaw
+    joint_index: 18
+    hardware_id: 2
+    online: true
+    
+  - name: left_forearm_roll
+    joint_index: 19
+    hardware_id: 3
+    online: true
+    
+  - name: left_hand_roll
+    joint_index: 20
+    hardware_id: 4
+    online: false  # Missing motor
+
+  # Right Arm (5 motors)
+  - name: right_shoulder_pitch
+    joint_index: 21
+    hardware_id: 14
+    online: true
+    
+  - name: right_upper_arm_roll
+    joint_index: 22
+    hardware_id: 6
+    online: true
+    
+  - name: right_elbow_yaw
+    joint_index: 23
+    hardware_id: 7
+    online: true
+    
+  - name: right_forearm_roll
+    joint_index: 24
+    hardware_id: 8
+    online: true
+    
+  - name: right_hand_roll
+    joint_index: 25
+    hardware_id: 9
+    online: false  # Missing motor
